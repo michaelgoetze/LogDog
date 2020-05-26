@@ -1,0 +1,25 @@
+{
+	"name": "LogDog",
+	"version": "0.0.3",
+	"manifest_version": 2,
+	"description": "Keep track of your Dominion.Games logs.",
+	"page_action": {
+		"default_icon": {
+			"32": "images/logger32.png",
+			"64": "images/logger64.png",
+			"256": "images/logger256.png"
+		},
+		"default_popup": "popup.html"
+	},
+	"permissions": ["tabs", "activeTab", "declarativeContent", "storage", "unlimitedStorage", "*://dominion.games/*"],
+	"icons": {
+		"32": "images/logger32.png",
+		"64": "images/logger64.png",
+		"256": "images/logger256.png"
+	},
+	"options_page": "options.html",
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": true
+	}
+}

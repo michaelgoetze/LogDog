@@ -1,0 +1,78 @@
+/* Link-Formatierung */
+a {
+	color: #7790F3;
+	text-decoration: none;
+}
+
+a:visited {
+	color: #5DD828;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #EEE022;
+	text-decoration: none;
+}
+
+body{
+	background-color:#000000; 
+	color:#FFFFFF;
+	width:650px; 
+	height:480px;
+	font-size:18px;
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps
+}
+
+button {
+	background-color:#000000; 
+	color:#FFFFFF; 
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps; 
+	padding:8px; 
+	border-width:2px; 
+	border-color:#FFFFFF; 
+	font-size:1em;
+}
+
+select#previousGames{
+	background-color:#000000; 
+	color:#FFFFFF; 
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps; 
+	padding:8px; 
+	border-width:2px; 
+	border-color:#FFFFFF; 
+	font-size:1em;
+}
+
+div {
+	background-color:#000000; 
+	color:#FFFFFF; 
+	font-size:48pt; 
+	font:inherit; 
+}
+
+td {
+	background-color:#000000; 
+	color:#FFFFFF; 
+	font-size:48pt; 
+	font:inherit; 
+	padding:5px
+}
+
+
+
+div#message {
+	border-style:solid;
+	border-radius:5px;
+	border-width: 2px;
+	border-color:#FFFFFF;
+	font:inherit; 
+	overflow-x:auto; 
+	overflow-y:scroll; 
+	height:310px; 
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps;
+	padding:5px;
+}

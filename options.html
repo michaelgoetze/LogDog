@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html style=''>
+	<head>
+		<script src='popup.js' ></script>
+		<link rel="stylesheet" type="text/css" href="main.css">
+
+	</head>
+	<body>
+		<table style="width:1400px">
+			<tr>
+				<td style="width:50%;padding-right:30px;">
+					<table>
+						<tr>
+							<td>
+							</td>
+							<td><img src="images/Logo.png" height="128px"/></td>
+							<td><span style="font-size:2.4em;font-style:bold;">LogDog</span> <br><span style="font-size:2.0em;font-style:bold;"> Logger For Dominion.Games</span></td>
+						</tr>
+					</table>
+
+					<div id="Description" style="text-align: justify;">
+						<p>LogDog is an open-source Chrome extension that will keep track of your games on <a href="https://Dominion.Games/">Dominion.Games</a>. Everytime you play a game of Dominion, LogDog will constantly keep track of the Log for you and store it locally in Chrome (the logs are not synched between computers!).</p>
+						<p>Now you can come back to your logs anytime in a manner of seconds and save them on your computer to do some fancy analysis yourself or copy them to use them in other apps like <a href="http://www.windominion.com">Windominion.com</a>. </p>
+						<p>Just click on the LogDog logo next to your adress bar on the right.
+						<h2>Uninstall</h2>
+						<p> If you want to uninstall this extension, go to <a id="chrome-extensions" href="#">chrome://extensions</a> and remove this extension. <span style="color:red;">Be aware that by removing this extension, all logs that have not been saved by downloading, will be lost permanently.</span>
+						<p>The source code for this extension is hosted on <a href="https://github.com/michaelgoetze/LogDog">GitHub</a></p> 
+					</div>
+
+					<div id="status"></div>
+						<button id="clearLogs" style="margin:5px;">Clear All Logs</button>
+					</div>
+				</td>
+				<td style="width:50%;padding-left:30px;">
+					<div id="content"><span style="font-size:2.0em;font-style:bold;">Inspect your saved Logs:</span></div>
+					<div id="UI"> 
+						<select id="previousGames"></select>
+						<button id="downloadLog">Download Log</button>
+						<button id="copyLog">Copy Log</button>
+						<button id="deleteLog">Delete Log</button>
+					</div>
+
+					<div id="info" style="padding:5px;"></div>
+
+					<div id="message">Analysing Dominion Log.</div>
+					
+					</div>
+				</td>
+			</tr>
+		</table>
+		<script src="options.js"></script>
+		<script src='popup.js' ></script>
+	</body>
+</html>
