@@ -14,65 +14,77 @@ a:hover {
 	text-decoration: none;
 }
 
-body{
+body {
 	background-color:#000000; 
 	color:#FFFFFF;
 	width:650px; 
 	height:480px;
-	font-size:18px;
-	font-family:TrajanPro-Bold;
-	font-variant:small-caps
 }
 
 button {
-	background-color:#000000; 
+	background-color:#2A2A2A; 
 	color:#FFFFFF; 
-	font-family:TrajanPro-Bold;
-	font-variant:small-caps; 
-	padding:8px; 
+	padding-top:8px; 
+	padding-bottom:8px; 
 	border-width:2px; 
-	border-color:#FFFFFF; 
-	font-size:1em;
+	border-color:#FFFFFF;
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps;
+	font-size:16pt;
+	margin-top:7px;
+	margin-bottom:7px;
 }
 
-select#previousGames{
-	background-color:#000000; 
+select {
+	background-color:#2A2A2A; 
 	color:#FFFFFF; 
-	font-family:TrajanPro-Bold;
-	font-variant:small-caps; 
+	margin-top:5px;
 	padding:8px; 
 	border-width:2px; 
 	border-color:#FFFFFF; 
-	font-size:1em;
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps;
+	font-size:16pt;
+	width:100%;
 }
 
 div {
 	background-color:#000000; 
 	color:#FFFFFF; 
-	font-size:48pt; 
-	font:inherit; 
+	font-size:16pt;
 }
 
 td {
 	background-color:#000000; 
 	color:#FFFFFF; 
-	font-size:48pt; 
-	font:inherit; 
-	padding:5px
+	padding:5px;
+	font-size:16pt;
+	vertical-align:top;
 }
 
+.title { 
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps;
+	font-size:16pt;
+	
+}
 
+h2 {
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps;
+	font-size:26pt;
+	
+}
 
 div#message {
 	border-style:solid;
 	border-radius:5px;
 	border-width: 2px;
 	border-color:#FFFFFF;
-	font:inherit; 
-	overflow-x:auto; 
-	overflow-y:scroll; 
-	height:310px; 
 	font-family:TrajanPro-Bold;
 	font-variant:small-caps;
+	overflow-x:auto; 
+	overflow-y:scroll; 
+	height:300px; 
 	padding:5px;
 }

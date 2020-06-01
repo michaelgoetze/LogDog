@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html style=''>
+<html>
 	<head>
 		<script src='popup.js' ></script>
 		<link rel="stylesheet" type="text/css" href="main.css">
@@ -10,22 +9,27 @@
 			<tr>
 				<td>
 				</td>
-				<td><img src="images/Logo.png" height="128px"/></td>
-				<td style="font-size:2.4em;font-style:bold;">LogDog - Logger For Dominion.Games</td>
+				<td><img src="images/LogDog.png" height="128px"/></td>
+				<td style="font-size:2.4em;font-style:bold;" class="title">LogDog - Logger For Dominion.Games</td>
 			</tr>
 		</table>
-
-		<div id="UI"> 
-			<select id="previousGames"></select>
-			<button id="downloadLog">Download Log</button>
-			<button id="copyLog">Copy Log</button>
-			<button id="deleteLog">Delete Log</button>
-			<button id="options">Info and Options</button>
-		</div>
-
-		<div id="info" style="padding:5px;"></div>
-
-		<div id="message">Analysing Dominion Log.</div>
-
+		<table>
+			<tr>
+				<td colspan="2">
+					<select id="previousGames"></select><br>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				<div id="message">Analysing Dominion Log.</div>
+				</td>
+				<td>
+					<button class="sameWidth" id="downloadLog" style="width:220px;">Download Log</button><br>
+					<button class="sameWidth" id="copyLog" style="width:220px;">Copy Log</button><br>
+					<button class="sameWidth" id="deleteLog" style="width:220px;">Delete Log</button><br>
+					<button class="sameWidth" id="options" style="width:220px;">More Options</button><br>
+				</td>
+			</tr>
+		</table>
 	</body>
 </html>

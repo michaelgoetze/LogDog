@@ -2,32 +2,60 @@ var fullLog = "";
 var ended = "";
 var gameID = ""
 var timer;
-chrome.runtime.onInstalled.addListener(function() {
-  console.log('Background script is running');
-  chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-    chrome.declarativeContent.onPageChanged.addRules([{
-      conditions: [new chrome.declarativeContent.PageStateMatcher({
-        pageUrl: {hostEquals: 'dominion.games'},
-      })],
-      actions: [new chrome.declarativeContent.ShowPageAction()]
-    }]);
-  });
-  
+var timerPaused = true;
 
+// import functions from storelog.js
+var imported = document.createElement("script");
+imported.src = "storelog.js";  
+document.getElementsByTagName("head")[0].appendChild(imported);
+
+chrome.runtime.onInstalled.addListener(function() {
+	console.log('Background script is installed');
+	chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+	chrome.declarativeContent.onPageChanged.addRules([{
+		conditions: [new chrome.declarativeContent.PageStateMatcher({
+			pageUrl: {hostEquals: 'dominion.games'},
+		})],
+		actions: [new chrome.declarativeContent.ShowPageAction()]
+	}]);
+	});
+  
+	console.log("starting timer after extension update/install");
+	startTimer();
 });
 
+function startTimer(){
+	if(timerPaused){
+		console.log('Timer started');
+		timer = setInterval(checkLog, 1000);
+		timerPaused = false;
+	}
+}
+
+chrome.webNavigation.onCompleted.addListener(function() {
+  console.log("starting timer (webnavigation completed)");
+  startTimer();
+});
+
+// start the script to run constantly. checkLog() will do anything on dominion.games
 chrome.runtime.onStartup.addListener(function() {
-  console.log('open');
-  timer = setInterval(checkLog, 1000);
-})
+  console.log("starting timer (webnavigation completed)");
+  startTimer();
+});
 
 chrome.runtime.onConnect.addListener(connected);
 
 // called, whenever getPagesSource.js is called to update the log and save the current progress
 chrome.runtime.onMessage.addListener(function(request, sender) {
 	if (request.action == "getLog") {
-
-		dominion_log = request.domLog.html;
+		// remove unnecessary code or code that will otherwise give errors later. saves space!
+		var log = request.domLog.html;
+		log = log.replace(/<!---->/g, "");
+		log = log.replace(/(data-ng-animate|own|onmouse.+?|class|ng-(if|repeat|bind-html))=".+?"\s*/g,"");
+		log = log.replace(/(cursor:\s*default;|user-select:\s*auto;)\s*/g,"")
+		log = log.replace(/\s*style=""\s*>/g, ">");
+		
+		dominion_log = log;
 		currentGameID = dominion_log.match(/#\d+/);
 		if(currentGameID != null){
 			currentGameID = currentGameID.toString();
@@ -37,24 +65,24 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 				ended = request.domLog.timeout;
 				gameID = currentGameID;
 				console.log("New game started " + gameID);
-				var game = {};
-				game[gameID] = fullLog;
-				chrome.storage.local.set(game, function() {
-					console.log('Log saved locally');
-				});
+				
+				storeLogLocally(fullLog);
+				
 			}else if(fullLog.length < dominion_log.length){
 				fullLog = dominion_log;
 				ended = request.domLog.timeout;
 				console.log("Log updated " + gameID);
-				var game = {};
-				game[gameID] = fullLog;
-				chrome.storage.local.set(game, function() {
-					console.log('Log saved locally');
-				});
+				
+				storeLogLocally(fullLog);
 			}
 		}else{
 			console.log("no active game running");
 		}
+	}else if(request.action=="clearAllLogs"){
+		console.log("clearing all Logs!");
+		fullLog = "";
+		ended = "";
+		gameID = ""
 	}
 
 });
@@ -62,11 +90,6 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 // called, when the popup is opened and will stop the interval timer
 function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/connect
 	console.log("connected to "+p);
-	
-	chrome.storage.local.get(null, function(items) {
-		var allKeys = Object.keys(items);
-		console.log(allKeys);
-	});
 	
 	p.onMessage.addListener(function(m) {
 		console.log("In background script, received message from content script")
@@ -89,17 +112,19 @@ function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/
 	});
 	
 	p.onDisconnect.addListener(disconnected);
-	clearInterval(timer)
+	clearInterval(timer);
+	timerPaused = true;
+	console.log('Timer paused');
 }
 
 // called, when the popup is closed and wil restart the interval timer again.
 function disconnected(p) {
-	console.log("disconnected from "+p);
-	timer = setInterval(checkLog, 1000);
+  console.log("backgroundscript disconnected from popup " + p);
+  startTimer();
 }
 
 
-
+// extract the log information from dominion.games
 function checkLog(){
 	chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
 		try{
@@ -107,13 +132,12 @@ function checkLog(){
 			let url = tab.url;
 			if(url.match(".*/dominion.games/.*")){
                 chrome.tabs.executeScript(tab.id, {
-					 file: "getPagesSource.js"
+					 file: "getLogFromSource.js"
                 }, null)
-			}else{
-			
 			}
 		}catch(e){
-			//console.log("Some error that you can ignore "+e.toString());
+			console.log("Error extracting log from dominion.games");
+			console.log(e);
 		}
     });
 }

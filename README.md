@@ -1,8 +1,8 @@
 # LogDog - Logger For Dominion.Games
 
-Chrome Extension that keeps track of the Game log on Dominion.Games
+Chrome Extension that keeps track of all your Game Logs on Dominion.Games
 
-![LogDog-Logo](images/Logo.png)
+![LogDog-Logo](images/LogDog.png)
 
 ## Install
 
@@ -22,10 +22,16 @@ Now you can come back to your logs anytime in a manner of seconds and save them 
 
 Just click on the LogDog logo next to your adress bar on the right to get access to all your stored logs. 
 
+Go to "More Options" or right-click on the extension and select "options" to Acces the options page. There you can filter for certain players or dates, backup and restore your logs and also view all your logs as in the popup.
+
+### Spectating
+
+LogDog will also save the logs of games that you spectate. 
+
 ### Access old Logs
 
 You can only use the LogDog popup on [Dominion.Games](https://dominion.games/). But you can still browse your logs, if you right-click the extension logo and choose options.
 
 ## Uninstall
 
-If you want to uninstall this extension, go to chrome://extensions and remove this extension. **Be aware that by removing this extension, all logs that have not been saved by downloading, will be lost permanently.**
+If you want to uninstall this extension, go to chrome://extensions and remove this extension. **Be aware that by removing this extension, all logs that have not been saved by downloading or creating a backup, will be lost permanently.**
