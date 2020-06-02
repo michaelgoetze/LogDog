@@ -12,11 +12,11 @@ Now you can come back to your logs anytime in a manner of seconds and save them 
 
 Just click on the LogDog logo next to your adress bar on the right to get access to all your stored logs. 
 
-![LogDog-Logo](images/Webstore/Screenshot01.png =600x)
+![LogDog-Logo](images/Webstore/Screenshot01.png)
 
 Go to "More Options" or right-click on the extension and select "options" to Acces the options page. There you can filter for certain players or dates, backup and restore your logs and also view all your logs as in the popup.
 
-![LogDog-Logo](images/Webstore/Screenshot02.png =600x)
+![LogDog-Logo](images/Webstore/Screenshot02.png)
 
 ### Spectating
 
