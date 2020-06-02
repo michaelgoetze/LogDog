@@ -28,7 +28,7 @@ You can only use the LogDog popup on [Dominion.Games](https://dominion.games/). 
 
 ## Install
 
-LogDog is (not yet) available in the Chrome Webstore. 
+LogDog is available in the [Chrome Webstore](https://chrome.google.com/webstore/detail/logdog-logger-for-dominio/ghcfiomipllgpdpifodecegjoljheinf). 
 
 To install this extension, download this repository as ZIP-file and extract the content anywhere on your PC, where it will stay (So the Desktop is maybe not the best place). Use Chrome and go to the adress:
 
