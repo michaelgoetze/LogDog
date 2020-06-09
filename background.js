@@ -95,7 +95,7 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 
 // called, when the popup is opened and will stop the interval timer
 function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/connect
-	console.log("connected to "+p);
+	console.log("connected to ",p);
 	
 	p.onMessage.addListener(function(m) {
 		if(m.request === "getFullLog"){
@@ -126,7 +126,7 @@ function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/
 
 // called, when the popup is closed and wil restart the interval timer again.
 function disconnected(p) {
-  console.log("backgroundscript disconnected from popup " + p);
+  console.log("backgroundscript disconnected from popup ", p);
   startTimer();
 }
 

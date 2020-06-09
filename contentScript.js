@@ -29,9 +29,8 @@ function getGameLog(kingdom = "") {
 /**
  * load a previously played game again with Lord Rat as opponent
  */ 
-function loadGame(gameID){
+function loadGame(gameID, delay = 400){
 	console.log("LOADING OLD GAME AS BOT GAME "+gameID);
-	var delay = 400;
 	if(["New Table","Neuer Tisch","Nouvelle table","Новый стол","新規卓","新房間"].indexOf(document.getElementsByClassName('tab-button')[1].innerText)!=-1){
 		document.getElementsByClassName('tab-button')[1].click();
 		setTimeout(function(){

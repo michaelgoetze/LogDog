@@ -254,9 +254,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 		chrome.tabs.update({ url: 'chrome://extensions' });
 	});
 	
-	console.log("TEST")
-
-
 	ignoreBotBox.checked = await getSetting("ignoreBotGames", defaultValue = false);
 	
 	playerSelect.addEventListener("change", filterGames);

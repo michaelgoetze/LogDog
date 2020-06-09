@@ -119,9 +119,8 @@ async function loadLastLog(){
  *  filteredBy - If the list was filtered, this variable indicates, which filters 
  *               were applied
  */
-function fillPreviousMatches(games, filteredBy=["any","any"]) {
+async function fillPreviousMatches(games, filteredBy=["any","any"]) {
 	
-	console.log("Filling previous matches", games)
 	// get all game ids from the array of games
 	var allUUIDs = Object.keys(games);
 	
@@ -129,6 +128,28 @@ function fillPreviousMatches(games, filteredBy=["any","any"]) {
 	for(uuid of allUUIDs){
 		if (checkUUID(uuid)){
 			allGameIDs.push(games[uuid].gameID);
+		}else{
+			//For compatibility with older logs (before v0.0.7)
+			if(uuid.match(/#\d+/) != null){
+				// uuid is actually a gameID in the previous version
+				// create a new uuid
+				var oldGame = games[uuid];
+				var dateArray = oldGame.date.split("/");
+				var date = dateArray[2].substring(2)+dateArray[1]+dateArray[0];
+				var newID = getDateUUID(date);
+				var newGame = {
+					uuid: newID,
+					gameID: uuid,
+					players: [oldGame.player1,oldGame.player2],
+					date: oldGame.date,
+					kingdom: "",
+					log: oldGame.log
+				};
+				allUUIDs.push(newID);
+				games[newID] = newGame;
+				await storeLogLocally(oldGame.log, newID, kingdom = "", dateString = oldGame.date, ignoreBotGames = false)
+				chrome.storage.local.remove(uuid);
+			}
 		}
 	}
 	
@@ -139,10 +160,12 @@ function fillPreviousMatches(games, filteredBy=["any","any"]) {
 	var players = [];
 	var dates = [];
 	
+	allUUIDs.sort();
 	// get all players and dates of all games and put the games in the selection box
 	for(uuid of allUUIDs){
 		if (checkUUID(uuid)){
 			var game = games[uuid];
+			console.log()
 			var gameID = game.gameID;
 			players.push(game.players[0]);
 			players.push(game.players[1]);
@@ -351,7 +374,7 @@ function onWindowLoad() {
 		
 		if(loadGameButton!=null){
 			loadGameButton.addEventListener('click', function(){
-				var gameID = previousGames.options[previousGames.selectedIndex].value;
+				var gameID = previousGames.options[previousGames.selectedIndex].value.split(",")[0];
 				chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
 					try{
 						let tab = tabs[0];
@@ -362,6 +385,7 @@ function onWindowLoad() {
 								gameID: gameID.replace("#","")
 							});
 						}
+						window.close();
 					}catch(e){
 						console.log("Error loading bot game");
 						console.log(e);

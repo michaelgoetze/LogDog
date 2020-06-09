@@ -14,10 +14,11 @@
  *
  * returns: gameID
  */
-async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none") { 
+async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none", ignoreBotGames = null) { 
 	try{
 		// get game ID from the log
 		var	gameID = gameLog.match(/#\d+/).toString();
+		console.log(gameID)
 		if(gameID.length > 0){
 			// extract player name and order. This is tested for english and should work for german, french and might work for russian. 
 			// It will fail before both players had their first turn.
@@ -33,11 +34,13 @@ async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none")
 			console.log("trying to save")
 			var player = regexp.exec(gameLog);
 			var bots = ["Lord Rattington","Revenge Witch","Lord Voldebot"];
-			var ignoreBotGames = await getSetting("ignoreBotGames", defaultValue = false);
+			if(ignoreBotGames == null){
+				ignoreBotGames = await getSetting("ignoreBotGames", defaultValue = false);
+			}
 			console.log("ignoreBotGames", ignoreBotGames);
 			while(player!=null){
 				players.push(player[2])
-				if(!ignoreBotGames || bots.indexOf(player[2])!=-1){
+				if(ignoreBotGames && bots.indexOf(player[2])!=-1){
 					console.log("Ignoring Bot Game")
 					return;
 				}
@@ -173,8 +176,11 @@ function getDateYYMMDD(separator="/"){
 /** function that generates a uuid
  *
  */
-function getDateUUID() {
-  return getDateYYMMDD("")+'-xxxx-xxxx-xxxx-xxxx'.replace(/[x]/g, function(c) {
+function getDateUUID(date=null) {
+  if(date == null){
+	  date = getDateYYMMDD("");
+  }
+  return date + '-xxxx-xxxx-xxxx-xxxx'.replace(/[x]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
