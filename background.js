@@ -1,6 +1,8 @@
+var uuid = ""
 var fullLog = "";
 var ended = "";
 var gameID = ""
+var kingdom = "";
 var timer;
 var timerPaused = true;
 
@@ -61,30 +63,34 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 			currentGameID = currentGameID.toString();
 			if(!(gameID === currentGameID)){
 				
+				uuid = getDateUUID();
+				console.log("New game started ", gameID, uuid);
 				fullLog = dominion_log;
+				kingdom = request.domLog.kingdom;
 				ended = request.domLog.timeout;
 				gameID = currentGameID;
-				console.log("New game started " + gameID);
 				
-				storeLogLocally(fullLog);
+				
+				storeLogLocally(fullLog, uuid, kingdom = kingdom);
 				
 			}else if(fullLog.length < dominion_log.length){
 				fullLog = dominion_log;
 				ended = request.domLog.timeout;
-				console.log("Log updated " + gameID);
-				
-				storeLogLocally(fullLog);
+				kingdom = request.domLog.kingdom;				
+				storeLogLocally(fullLog, uuid, kingdom = kingdom);
 			}
 		}else{
 			console.log("no active game running");
 		}
-	}else if(request.action=="clearAllLogs"){
+	}else if(request.action == "clearAllLogs"){
 		console.log("clearing all Logs!");
 		fullLog = "";
 		ended = "";
 		gameID = ""
+		kingdom = "";
+	}else if(request.action == "getKingdom"){
+		console.log(request.kingdom);
 	}
-
 });
 
 // called, when the popup is opened and will stop the interval timer
@@ -92,16 +98,17 @@ function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/
 	console.log("connected to "+p);
 	
 	p.onMessage.addListener(function(m) {
-		console.log("In background script, received message from content script")
-		console.log(m.request);
 		if(m.request === "getFullLog"){
 			checkLog();
-			setTimeout(function(){p.postMessage({log: fullLog, timeout: ended }); }, 200);
+			setTimeout(function(){p.postMessage({log: fullLog, uuid: uuid, timeout: ended, kingdom: kingdom }); }, 200);
 		}
 		if(m.request === "deleteLog"){
 			console.log("delete received of game " + m.gameID);
-			if(m.gameID === gameID){
+			if(m.uuid === uuid){
 				
+				uuid = ""
+				kingdom = "";
+				ended = "";
 				gameID = "";
 				fullLog = "";
 			}
@@ -131,13 +138,12 @@ function checkLog(){
 			let tab = tabs[0];
 			let url = tab.url;
 			if(url.match(".*/dominion.games/.*")){
-                chrome.tabs.executeScript(tab.id, {
-					 file: "getLogFromSource.js"
-                }, null)
+				
+                chrome.tabs.sendMessage(tab.id, {
+					action: "getLogFromContent",
+					kingdom: kingdom
+				});
 			}
-		}catch(e){
-			console.log("Error extracting log from dominion.games");
-			console.log(e);
-		}
+		}catch(e){}
     });
 }

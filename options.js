@@ -12,7 +12,9 @@ var dateSelect = document.getElementById('dateSelect');
 var previousGames = document.getElementById("previousGames");
 var message = document.getElementById('message');
 var backupFile = document.getElementById('backup-file');
-
+var ignoreBotBox = document.getElementById('ignoreBotGames');
+	
+	
 
 /**
  * function that clears local storage for all games that are stored. Cannot be 
@@ -57,11 +59,13 @@ async function changeNames(){
 		gameID = log.match(/#\d+/).toString()
 		
 		// Load the corresponding game 
-		var game = await loadStoredGame(gameID);
+		var game = await loadStoredGameByGameID(gameID);
 		
 		// get the corrected player names (display the original ones)
-		var player1 = prompt("Player 1", game.player1);
-		var player2 = prompt("Player 2", game.player2);
+		var player1 = prompt("Player 1", game.players[0]);
+		if(player1 == null) return;
+		var player2 = prompt("Player 2", game.players[1]);
+		if(player2 == null) return;
 		
 		// Determine old and new name abbreviations:
 		var abbr1 = "";
@@ -69,13 +73,13 @@ async function changeNames(){
 		let i=0;
 		do{
 			try{
-				abbr1 = abbr1 + game.player1.charAt(i);
+				abbr1 = abbr1 + player1.charAt(i);
 			}catch(e){
 				console.log("setting up abbr1");
 				console.log(e);
 				};
 			try{
-				abbr2 = abbr2 + game.player2.charAt(i);
+				abbr2 = abbr2 + player2.charAt(i);
 			}catch(e){
 				console.log("Setting up abbr2");
 				console.log(e);};
@@ -100,9 +104,9 @@ async function changeNames(){
 		}while(newAbbr1 == newAbbr2);
 		
 		//Exchange names and abbreviations in the log 
-		var re = new RegExp(game.player1, 'g');
+		var re = new RegExp(game.players[0], 'g');
 		game.log = game.log.replace(re, player1);
-		re = new RegExp(game.player2, 'g');
+		re = new RegExp(game.players[1], 'g');
 		game.log = game.log.replace(re, player2);
 		re = new RegExp(">"+abbr1+"<", 'g');
 		game.log = game.log.replace(re, ">"+newAbbr1+"<");
@@ -110,12 +114,13 @@ async function changeNames(){
 		game.log = game.log.replace(re, ">"+newAbbr2+"<");
 		
 		// store the modified log to the local storage
-		storeLogLocally(game.log,game.date);
+		await storeLogLocally(game.log, game.uuid, game.kingdom, game.date);
 		
 		// update the log in the browser view
 		message.innerHTML = game.log;
 		
 		// refresh the previousGames drop down menu
+		console.log("Filling Previous Matches")
 		chrome.storage.local.get(null, fillPreviousMatches);	
 	}else{
 		alert("No game selected to change names.\n Play a game of dominion or load a backup");
@@ -143,20 +148,22 @@ function filterGames(){
 	// Load all games and filter for the matching ones 
 	chrome.storage.local.get(null,async function(games){
 		// get all game IDs
-		var allGameIDs = Object.keys(games);
-		
+		var allUUIDs = Object.keys(games);
+	
 		// create a new array that will hold the filtered game ids
 		var filteredGames = {};
-		for(gameID of allGameIDs){
-			//check if the gameID key actually is a gameID to prevent exceptions
-			if(/#\d+/.test(gameID)){
-				var game = games[gameID];
+		for(uuid of allUUIDs){
+			//check if the uuid key actually is a uuid to prevent exceptions
+			if (checkUUID(uuid)){
+				var game = games[uuid];
 				//compare the filter to each game and push matching ids into gameIDs
-				if((date == "any" || game.date == date)&&(player == "any" || game.player1 == player || game.player2 == player)){
-					filteredGames[gameID] = game;
+				if((date == "any" || game.date == date)&&(player == "any" || game.players.indexOf(player) != -1)){
+					filteredGames[uuid] = game;
 				}
 			}
 		}
+		
+		console.log(filteredGames)
 		
 		// Load only the filtered matches again
 		fillPreviousMatches(filteredGames, [player,date]);
@@ -196,37 +203,7 @@ function backupLogs() {
 }
 
 
-// Event Listeners
 
-/**
- * Triggers changes when filters are applied, filtering for players and match dates
- */
- 
-playerSelect.addEventListener("change", filterGames);
-dateSelect.addEventListener("change", filterGames);
-
-/**
- * Button events:
- */
-document.getElementById('clearLogs').addEventListener('click',clearAllLogs);
-document.getElementById('backupLogs').addEventListener('click',backupLogs);
-document.getElementById('changeNames').addEventListener('click',changeNames);
-
-/**
- * Event that is relayed to the file input selection
- */
-document.getElementById('loadBackup').addEventListener('click',function(){
-	backupFile.click();
-});
-
-/**
- * Link to Chrome:extensions
- */
-document.addEventListener('DOMContentLoaded', function() {
-	document.getElementById('chrome-extensions').addEventListener('click', function() {
-		chrome.tabs.update({ url: 'chrome://extensions' });
-	});
-});
 
 /**
  * Event listener that is triggered, when a file is selected for loading a backup.
@@ -264,4 +241,47 @@ backupFile.addEventListener('change',function(){
 		// set the file input value to null so that the same backup could be loaded again (e.g. if clearAllLogs was called after the backup.
 		backupFile.value = null;
 	}
+});
+
+
+/**
+ * Link to Chrome:extensions
+ */
+document.addEventListener('DOMContentLoaded', async function() {
+	
+	
+	document.getElementById('chrome-extensions').addEventListener('click', function() {
+		chrome.tabs.update({ url: 'chrome://extensions' });
+	});
+	
+	console.log("TEST")
+
+
+	ignoreBotBox.checked = await getSetting("ignoreBotGames", defaultValue = false);
+	
+	playerSelect.addEventListener("change", filterGames);
+	dateSelect.addEventListener("change", filterGames);
+	
+	
+	ignoreBotBox.addEventListener('change',function(){
+		//TODO has to change....
+		var settings = {}
+		settings["ignoreBotGames"] = ignoreBotBox.checked;
+		var value = {}
+		value["settings"] = settings;
+		chrome.storage.local.set(value, function(){
+			console.log("saved settings",settings)
+		});
+	});
+	
+	document.getElementById('clearLogs').addEventListener('click',clearAllLogs);
+	document.getElementById('backupLogs').addEventListener('click',backupLogs);
+	document.getElementById('changeNames').addEventListener('click',changeNames);
+
+	document.getElementById('loadBackup').addEventListener('click',function(){
+		backupFile.click();
+	});
+
+
+	
 });

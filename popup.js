@@ -12,13 +12,13 @@ var myPort
 async function saveData(gameID) {
 	try{
 		// Load the current game based on its gameID
-		var game = await loadStoredGame(gameID);
+		var game = await loadStoredGameByGameID(gameID);
 		
 		// Prepare log for saving and create fileName
 		message.innerHTML = game.log;
 		var log = message.innerText;
 		var date = game.date.replace(/\//g, "");
-		var fileName = ["LogDog",date,game.player1,game.player2,gameID+".txt"].join("_"); 
+		var fileName = ["LogDog",date,game.players[0],game.players[1],gameID+".txt"].join("_"); 
 		
 		// parse game object to json
 		var json = JSON.stringify(log),
@@ -84,11 +84,11 @@ function copyTextToClipboard(text) {
  */
 function deleteSelectedLog(){
 	if(previousGames.options.length>0){
-		var delGameID = previousGames.options[previousGames.selectedIndex].value;
-		
+		var delUUID = previousGames.options[previousGames.selectedIndex].value.split(",")[1];
+		console.log(delUUID);
 		// delete the selected game from the storage and inform the background script to delete temporary data, if it is the last/current game that was deleted
-		chrome.storage.local.remove(delGameID, function(){
-			myPort.postMessage({request: "deleteLog", gameID: delGameID});
+		chrome.storage.local.remove(delUUID, function(){
+			myPort.postMessage({request: "deleteLog", uuid: delUUID});
 			chrome.storage.local.get(null, fillPreviousMatches);
 		});
 	}
@@ -101,10 +101,9 @@ function deleteSelectedLog(){
 async function loadLastLog(){
 	
 	if(previousGames.options.length>0){
-		var lastGameID = previousGames.options[0].value;
-
+		var lastGameID = previousGames.options[0].value.split(",")[0];
 		if(/#\d+/.test(lastGameID)){
-			var game = await loadStoredGame(lastGameID);
+			var game = await loadStoredGameByGameID(lastGameID);
 			message.innerHTML = game.log;
 			return;
 		}
@@ -120,9 +119,18 @@ async function loadLastLog(){
  *  filteredBy - If the list was filtered, this variable indicates, which filters 
  *               were applied
  */
-async function fillPreviousMatches(games, filteredBy=["any","any"]) {
+function fillPreviousMatches(games, filteredBy=["any","any"]) {
+	
+	console.log("Filling previous matches", games)
 	// get all game ids from the array of games
-	var allGameIDs = Object.keys(games);
+	var allUUIDs = Object.keys(games);
+	
+	var allGameIDs = [];
+	for(uuid of allUUIDs){
+		if (checkUUID(uuid)){
+			allGameIDs.push(games[uuid].gameID);
+		}
+	}
 	
 	// first, remove all entries in the select box
 	for(i = previousGames.options.length-1; i>=0; i--){previousGames.remove(i);}
@@ -132,15 +140,16 @@ async function fillPreviousMatches(games, filteredBy=["any","any"]) {
 	var dates = [];
 	
 	// get all players and dates of all games and put the games in the selection box
-	for(gameID of allGameIDs){
-		if(/#\d+/.test(gameID)){
-			var game = games[gameID];
-			players.push(game.player1);
-			players.push(game.player2);
+	for(uuid of allUUIDs){
+		if (checkUUID(uuid)){
+			var game = games[uuid];
+			var gameID = game.gameID;
+			players.push(game.players[0]);
+			players.push(game.players[1]);
 			dates.push(game.date);
 			var el = document.createElement("option");
-			el.textContent = [gameID, game.player1,"vs.", game.player2,"(" + game.date + ")"].join(" ");;
-			el.value = gameID;
+			el.textContent = [gameID, game.players[0],"vs.", game.players[1],"(" + game.date + ")"].join(" ");;
+			el.value = [gameID, uuid].join(",");
 			previousGames.appendChild(el);
 		}
 	}
@@ -214,8 +223,6 @@ async function fillPreviousMatches(games, filteredBy=["any","any"]) {
 			}
 		}
 	}catch(e){
-		console.log("Error filtering matches (only works in options.html)");
-		console.log(e);
 	}// only works in options.html
 
 	try{
@@ -226,6 +233,9 @@ async function fillPreviousMatches(games, filteredBy=["any","any"]) {
 		console.log(e);
 	}
 }
+
+
+
 	
 
 /**
@@ -243,6 +253,8 @@ function onWindowLoad() {
 		var dateSelect = document.getElementById("dateSelect");
 		var playerSelect = document.getElementById("playerSelect");
 		var optionsButton = document.getElementById("options");
+		var loadGameButton = document.getElementById("loadGame");
+	
 		//Load all previous games into the popup option selector 
 		chrome.storage.local.get(null, fillPreviousMatches);
 		
@@ -258,7 +270,6 @@ function onWindowLoad() {
 		myPort.onMessage.addListener(async function(m) {
 			// retrieve the log from the message
 			log = m.log;
-			
 			if(log != null && log.length > 0){
 				// view the log in the message div of the popup/options window
 				message.innerHTML = log;
@@ -276,8 +287,9 @@ function onWindowLoad() {
 				
 				// Select the current log in the drop down or make sure that it is not present in the list (found remains false)
 				var found = false;
+				var value = [gameID, m.uuid].join(",");
 				for(i = 0; i< previousGames.length; i++){
-					if(gameID === previousGames[i].value){
+					if(value === previousGames[i].value){
 						previousGames.selectedIndex = i;
 						found = true;
 						break;
@@ -288,16 +300,19 @@ function onWindowLoad() {
 				if(!found){
 					if(/#\d+/.test(gameID)){
 						
-						// Store the game to storage.local
-						storeLogLocally(log);
+						// Store the game to storage.local TODO set uuid in background script!!
+						storeLogLocally(log, m.uuid, kingdom = m.kingdom);
 						
 						// get the game object
-						var game = await loadStoredGame(gameID);
-						
+						var game = await loadStoredGameByGameID(gameID);
+												
 						// add the game to the list of previous games
 						var el = document.createElement("option");
-						el.textContent = [gameID, game.player1,"vs.", game.player2,"(" + game.date + ")"].join(" ");;
-						el.value = gameID;
+						el.textContent = [gameID, game.players[0],"vs.", game.players[1],"(" + game.date + ")"].join(" ");;
+						
+		
+						el.value = [gameID, uuid].join(",");
+		
 						previousGames.appendChild(el);
 						
 						// select this game entry
@@ -315,10 +330,10 @@ function onWindowLoad() {
 		previousGames.addEventListener("change", async function(){
 			
 			// get the ID of the selected game
-			var gameID = previousGames.options[previousGames.selectedIndex].value;
+			var value = previousGames.options[previousGames.selectedIndex].value;
 			
 			// load the selected game
-			var game = await loadStoredGame(gameID);
+			var game = await loadStoredGameByUUID(value.split(",")[1]);
 			
 			// view the log 
 			message.innerHTML = game.log;
@@ -334,6 +349,26 @@ function onWindowLoad() {
 		document.getElementById('copyLog').addEventListener('click',function(){copyTextToClipboard(message.innerText)});
 		document.getElementById('deleteLog').addEventListener('click',function(){deleteSelectedLog()});
 		
+		if(loadGameButton!=null){
+			loadGameButton.addEventListener('click', function(){
+				var gameID = previousGames.options[previousGames.selectedIndex].value;
+				chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+					try{
+						let tab = tabs[0];
+						let url = tab.url;
+						if(url.match(".*/dominion.games/.*")){
+							chrome.tabs.sendMessage(tab.id, {
+								action: "loadGame",
+								gameID: gameID.replace("#","")
+							});
+						}
+					}catch(e){
+						console.log("Error loading bot game");
+						console.log(e);
+					}
+				});
+			});
+		}
 		if(optionsButton!=null){
 			optionsButton.addEventListener('click',function() {
 				if (chrome.runtime.openOptionsPage) {
@@ -348,8 +383,6 @@ function onWindowLoad() {
 		console.log(e);
 	}
 }
-
-
 
 window.onload = onWindowLoad;
 	
