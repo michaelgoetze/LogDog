@@ -1,4 +1,9 @@
-ChangeLog
+# ChangeLog
+
+v0.0.9:
+ - Date, player and game dropdown boxes are sorted
+ - Games can be reloaded as a new game with the same kingsom cards (no. of players by default 2)
+
 v0.0.8:
  - Games sorted by date
  - Compatibility with older log backups created

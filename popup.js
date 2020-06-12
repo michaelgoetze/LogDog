@@ -112,6 +112,34 @@ async function loadLastLog(){
 	message.innerHTML = "no Log available &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 }
 
+/** 
+ * function that sorts select boxes
+ * from https://stackoverflow.com/a/278509/2627410
+ *
+ */
+ 
+function sortSelect(selElem, skip=0) {
+    if(skip>0)skip--;
+	var tmpAry = new Array();
+    for (var i=skip;i<selElem.options.length;i++) {
+        tmpAry[i-skip] = new Array();
+        tmpAry[i-skip][0] = selElem.options[i].text;
+        tmpAry[i-skip][1] = selElem.options[i].value;
+    }
+    
+	tmpAry.sort(function (a, b) {
+		return a[0].toLowerCase().localeCompare(b[0].toLowerCase());
+	});
+	console.log(tmpAry);
+    while (selElem.options.length > skip+1) {
+        selElem.options[skip+1] = null;
+    }
+    for (var i=skip;i<tmpAry.length;i++) {
+        var op = new Option(tmpAry[i-skip][0], tmpAry[i-skip][1]);
+        selElem.options[i] = op;
+    }
+    return;
+}
 
 /**
  * Fill the previous game selection box with all games that passed the filter.
@@ -176,6 +204,7 @@ async function fillPreviousMatches(games, filteredBy=["any","any"]) {
 			previousGames.appendChild(el);
 		}
 	}
+	sortSelect(previousGames);
 	
 	// get the unique set of players and dates
 	players = new Set(players);
@@ -255,6 +284,10 @@ async function fillPreviousMatches(games, filteredBy=["any","any"]) {
 		console.log("Error loading last log");
 		console.log(e);
 	}
+	
+	try{
+		sortSelect(playerSelect,skip=2);
+	}catch(e){}//only works in options page
 }
 
 
@@ -277,6 +310,7 @@ function onWindowLoad() {
 		var playerSelect = document.getElementById("playerSelect");
 		var optionsButton = document.getElementById("options");
 		var loadGameButton = document.getElementById("loadGame");
+		var loadKingdomButton = document.getElementById("loadKingdom");
 	
 		//Load all previous games into the popup option selector 
 		chrome.storage.local.get(null, fillPreviousMatches);
@@ -371,6 +405,27 @@ function onWindowLoad() {
 		
 		document.getElementById('copyLog').addEventListener('click',function(){copyTextToClipboard(message.innerText)});
 		document.getElementById('deleteLog').addEventListener('click',function(){deleteSelectedLog()});
+		if(loadKingdomButton!=null){
+			loadKingdomButton.addEventListener('click',async function(){
+				var game = await loadStoredGameByGameID(previousGames.options[previousGames.selectedIndex].value.split(",")[0]);
+				chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+					try{
+						let tab = tabs[0];
+						let url = tab.url;
+						if(url.match(".*/dominion.games/.*")){
+							chrome.tabs.sendMessage(tab.id, {
+								action: "loadKingdom",
+								kingdom: game.kingdom
+							});
+						}
+						window.close();
+					}catch(e){
+						console.log("Error loading bot game");
+						console.log(e);
+					}
+				});
+			});
+		}
 		
 		if(loadGameButton!=null){
 			loadGameButton.addEventListener('click', function(){

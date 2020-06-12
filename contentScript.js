@@ -29,7 +29,7 @@ function getGameLog(kingdom = "") {
 /**
  * load a previously played game again with Lord Rat as opponent
  */ 
-function loadGame(gameID, delay = 400){
+function loadGame(gameID, delay = 567){
 	console.log("LOADING OLD GAME AS BOT GAME "+gameID);
 	if(["New Table","Neuer Tisch","Nouvelle table","Новый стол","新規卓","新房間"].indexOf(document.getElementsByClassName('tab-button')[1].innerText)!=-1){
 		document.getElementsByClassName('tab-button')[1].click();
@@ -180,10 +180,64 @@ function getKingdom(){
 	}catch(e){}
 }
 
+function loadKingdom(kingdom, delay = 567){
+	console.log("LOADING OLD GAME AS Kingdom card set ",kingdom);
+	if(Object.keys(kingdom).length>0){
+		if(["New Table","Neuer Tisch","Nouvelle table","Новый стол","新規卓","新房間"].indexOf(document.getElementsByClassName('tab-button')[1].innerText)!=-1){
+			document.getElementsByClassName('tab-button')[1].click();
+			setTimeout(function(){
+				// Load old game button
+				document.getElementsByClassName('lobby-button')[0].click();
+				setTimeout(function(){
+					//Add Bot Lord Rattington
+					var botButton = document.getElementsByClassName('lobby-button kingdom-selection')[0];
+					if(botButton.parentElement.ariaHidden=="false"){
+						botButton.click()
+					}
+					setTimeout(function(){
+						// Click Select Kingdom button
+						document.getElementsByClassName('lobby-button kingdom-selection')[2].click()
+						setTimeout(function(){
+							while(document.getElementsByClassName("selection-symbol").length>0){	
+								document.getElementsByClassName("selection-symbol")[0].click()	
+							}
+							var kingdomInput = document.getElementsByClassName("ng-pristine ng-untouched ng-empty ng-valid ng-valid-required")[0];
+							kingdomInput.value = kingdom["kingdomCards"];
+							kingdomInput.dispatchEvent(new Event('change'));
+							
+							document.getElementsByClassName("lobby-button toggle-button")[0].click();
+							document.getElementsByClassName("lobby-button toggle-button")[1].click();
+							
+							if(kingdom["colonyPlatin"]){
+								setTimeout(function(){
+									document.getElementsByClassName("lobby-button toggle-button")[0].click();
+								},delay);
+							}
+							
+							if(kingdom["shelters"]){
+								setTimeout(function(){
+									document.getElementsByClassName("lobby-button toggle-button")[1].click();
+								},delay);
+							}
+						},delay);
+					},delay);
+				},delay);
+			},delay);
+		}else{
+			console.log("Cannot create new table");
+		}
+	}else{
+		console.log("Old, incompatible Game"); 
+	}
+}
+
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	if(message.action == "loadGame"){
 		// Load game as a bot game
 		loadGame(message.gameID);
+	}else if(message.action == "loadKingdom"){
+		// Load game as a bot game
+		loadKingdom(message.kingdom);
 	}else if(message.action == "getLogFromContent"){
 		// get log information
 		chrome.runtime.sendMessage({

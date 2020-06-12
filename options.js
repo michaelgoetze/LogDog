@@ -142,6 +142,7 @@ function filterGames(){
 	var player = playerSelect.options[playerSelect.selectedIndex].value
 	var date = dateSelect.options[dateSelect.selectedIndex].value
 	
+	
 	// remove all games from the drop down menu first
 	for(i = previousGames.length-1; i>=0; i--){previousGames.remove(i);}
 	
@@ -149,15 +150,15 @@ function filterGames(){
 	chrome.storage.local.get(null,async function(games){
 		// get all game IDs
 		var allUUIDs = Object.keys(games);
-	
 		// create a new array that will hold the filtered game ids
 		var filteredGames = {};
 		for(uuid of allUUIDs){
 			//check if the uuid key actually is a uuid to prevent exceptions
 			if (checkUUID(uuid)){
+				console.log(uuid)
 				var game = games[uuid];
 				//compare the filter to each game and push matching ids into gameIDs
-				if((date == "any" || game.date == date)&&(player == "any" || game.players.indexOf(player) != -1)){
+				if((date.trim() == "any" || game.date == date)&&(player.trim() == "any" || game.players.indexOf(player) != -1)){
 					filteredGames[uuid] = game;
 				}
 			}
