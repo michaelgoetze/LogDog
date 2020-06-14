@@ -25,9 +25,9 @@ function getGameLog(kingdom = "") {
 	return result;
 }
 
-
 /**
- * load a previously played game again with Lord Rat as opponent
+ * load a previously played game again with Lord Rat as opponent.
+ * The delay is used to wait for the page to react before making the next click. The number is arbitrary!
  */ 
 function loadGame(gameID, delay = 567){
 	console.log("LOADING OLD GAME AS BOT GAME "+gameID);
@@ -69,9 +69,8 @@ function loadGame(gameID, delay = 567){
 	}
 }
 
-
 /** get the kingdom cards (including landscape cards) to also save alongside the log.
- *	Complicated picks: castles, shelters (Necropolis,Overgrown Estate,Hovel), platinum, others?
+ *	More complicated picks: castles, shelters (Necropolis,Overgrown Estate,Hovel), platinum, others?
  *  
  *  Those are all kingdom cards:
  *   document.getElementsByClassName('kingdom-viewer-group')[0].getElementsByClassName('full-card-name card-name')
@@ -180,6 +179,9 @@ function getKingdom(){
 	}catch(e){}
 }
 
+/**
+ * function that loads a new game based on the original set of kingdom cards
+ */
 function loadKingdom(kingdom, delay = 567){
 	console.log("LOADING OLD GAME AS Kingdom card set ",kingdom);
 	if(Object.keys(kingdom).length>0){
@@ -231,6 +233,9 @@ function loadKingdom(kingdom, delay = 567){
 	}
 }
 
+/**
+ * receive messages to start certain tasks in the content.
+ */
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	if(message.action == "loadGame"){
 		// Load game as a bot game

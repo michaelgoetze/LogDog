@@ -23,23 +23,20 @@ async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none",
 			// extract player name and order. This is tested for english and should work for german, french and might work for russian. 
 			// It will fail before both players had their first turn.
 			
-			gameLog.replace(/Rattington/g, "Rat");
-			
-			//save some memory:
-			gameLog.replace(/\s+/g," ");
-			gameLog.replace(/\n/g," ");
+			gameLog = gameLog.replace(/Rattington/g, "Rat");
 			
 			var regexp = />(Turn|Zug|Tour|Ход) 1 - (.+?)</g;
 			players = [];
 			console.log("trying to save")
 			var player = regexp.exec(gameLog);
-			var bots = ["Lord Rattington","Revenge Witch","Lord Voldebot"];
+			var bots = ["Lord Rat","Revenge Witch","Lord Voldebot"];
 			if(ignoreBotGames == null){
 				ignoreBotGames = await getSetting("ignoreBotGames", defaultValue = false);
 			}
 			console.log("ignoreBotGames", ignoreBotGames);
 			while(player!=null){
 				players.push(player[2])
+				console.log(player[2])
 				if(ignoreBotGames && bots.indexOf(player[2])!=-1){
 					console.log("Ignoring Bot Game")
 					return;
@@ -87,7 +84,6 @@ async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none",
 	return "none";
 }
 
-
 /**
  * Function that loads and returns a game from local storage by its game id. The 
  * function returns a promise and needs an await in an async function.
@@ -95,12 +91,26 @@ async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none",
 function loadStoredGameByGameID(gameID) {
     return new Promise((resolve) => {
 		chrome.storage.local.get(null, function(games) {
+			var allGames = []
 			for(uuid in games){
 				if(games[uuid].gameID == gameID){
-					resolve(games[uuid]);
-					return
+					allGames.push(games[uuid])
 				}
 			}
+			
+			if(allGames.length>1){
+				var bots = ["Lord Rattington","Revenge Witch","Lord Voldebot"];
+				for(game of allGames){
+					//Check if the game was played without bots, if so, this is the original game 
+					var combined = bots.concat(game.players);
+					if((combined.length == new Set(combined).size)){
+						resolve(game);
+						return;
+					}
+				}					
+			}
+			resolve(allGames[0]);
+			return;
 		});
     });
 }
@@ -117,6 +127,9 @@ function loadStoredGameByUUID(uuid) {
     });
 }
 
+/**
+ * Functions to handle user-defined settings values.
+ */
 function getSetting(property, defaultValue = undefined){
 	return new Promise((resolve) => {
 		chrome.storage.local.get("settings",function(value){
@@ -131,6 +144,20 @@ function getSetting(property, defaultValue = undefined){
 		});
 	});
 	
+}
+
+function setSetting(property, value){
+	chrome.storage.local.get(["settings"], function(settings){
+		if(settings == undefined){
+			settings = {}
+		}
+		settings[property] = value;
+		var settingsObj = {}
+		settingsObj["settings"] = settings;
+		chrome.storage.local.set(settingsObj, function(){
+			console.log("updated settings",settings)
+		});
+	});
 }
 
 /**

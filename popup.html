@@ -4,13 +4,23 @@
 		<link rel="stylesheet" type="text/css" href="main.css">
 
 	</head>
-	<body>
+	<body style="min-width:600px;">
 		<table>
 			<tr>
 				<td>
 				</td>
-				<td><img src="images/LogDog.png" height="128px"/></td>
+				<td><img src="images/LogDog.png" height="100px"/></td>
 				<td style="font-size:2.4em;font-style:bold;" class="title">LogDog - Logger For Dominion.Games</td>
+			</tr>
+		</table>
+		<table width="100%">
+			<tr>
+				<td style="width:50%">
+					<select id="playerSelect"></select>
+				</td>
+				<td style="width:50%">
+					<select id="dateSelect"></select>
+				</td>
 			</tr>
 		</table>
 		<table>
@@ -24,12 +34,12 @@
 				<div id="message">Analysing Dominion Log.</div>
 				</td>
 				<td>
-					<button class="sameWidth" id="downloadLog" style="width:220px;">Download Log</button><br>
-					<button class="sameWidth" id="copyLog" style="width:220px;">Copy Log</button><br>
-					<button class="sameWidth" id="deleteLog" style="width:220px;">Delete Log</button><br>
-					<button class="sameWidth" id="options" style="width:220px;">More Options</button><br>
-					<button class="sameWidth" id="loadGame" style="width:220px;">Load as Bot-Game</button><br>
-					<button class="sameWidth" id="loadKingdom" style="width:220px;">Reload as Kingdom</button><br>
+					<button class="sameWidth" id="downloadLog" title="Download the text of the selected log as text file" style="width:220px;">Download Log</button><br>
+					<button class="sameWidth" id="copyLog" title="Copy the text of the selected log" style="width:220px;">Copy Log</button><br>
+					<button class="sameWidth" id="deleteLog" title="Delete the selected log" style="width:220px;">Delete Log</button><br>
+					<button class="sameWidth" id="options" title="Go to the options page of this extension" style="width:220px;">More Options</button><br>
+					<button class="sameWidth" id="loadGame" title="Reload this game as a Bot game" style="width:220px;">Load as Bot-Game</button><br>
+					<button class="sameWidth" id="loadKingdom" title="Load a new game with kingdom cards of the selected game" style="width:220px;">Reload as Kingdom</button><br>
 				</td>
 			</tr>
 		</table>

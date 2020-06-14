@@ -6,26 +6,16 @@ var kingdom = "";
 var timer;
 var timerPaused = true;
 
-// import functions from storelog.js
+/**
+ * import functions from storelog.js
+ */
 var imported = document.createElement("script");
 imported.src = "storelog.js";  
 document.getElementsByTagName("head")[0].appendChild(imported);
 
-chrome.runtime.onInstalled.addListener(function() {
-	console.log('Background script is installed');
-	chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-	chrome.declarativeContent.onPageChanged.addRules([{
-		conditions: [new chrome.declarativeContent.PageStateMatcher({
-			pageUrl: {hostEquals: 'dominion.games'},
-		})],
-		actions: [new chrome.declarativeContent.ShowPageAction()]
-	}]);
-	});
-  
-	console.log("starting timer after extension update/install");
-	startTimer();
-});
-
+/**
+ * Timer that frequently checks whether the log has changed frequency is every second
+ */
 function startTimer(){
 	if(timerPaused){
 		console.log('Timer started');
@@ -34,20 +24,37 @@ function startTimer(){
 	}
 }
 
+/**
+ * start the script to run constantly. checkLog() will do anything on dominion.games
+ * only run pageActions on dominion.games
+ */
+chrome.runtime.onInstalled.addListener(function() {
+	console.log('Background script is installed');
+	chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+		chrome.declarativeContent.onPageChanged.addRules([{
+			conditions: [new chrome.declarativeContent.PageStateMatcher({
+				pageUrl: {hostEquals: 'dominion.games'},
+			})],
+			actions: [new chrome.declarativeContent.ShowPageAction()]
+		}]);
+	});  
+	console.log("starting timer after extension update/install");
+	startTimer();
+});
+
 chrome.webNavigation.onCompleted.addListener(function() {
   console.log("starting timer (webnavigation completed)");
   startTimer();
 });
 
-// start the script to run constantly. checkLog() will do anything on dominion.games
 chrome.runtime.onStartup.addListener(function() {
   console.log("starting timer (webnavigation completed)");
   startTimer();
 });
 
-chrome.runtime.onConnect.addListener(connected);
-
-// called, whenever getPagesSource.js is called to update the log and save the current progress
+/**
+ * called, whenever getPagesSource.js is called to update the log and save the current progress
+ */
 chrome.runtime.onMessage.addListener(function(request, sender) {
 	if (request.action == "getLog") {
 		// remove unnecessary code or code that will otherwise give errors later. saves space!
@@ -56,6 +63,8 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 		log = log.replace(/(data-ng-animate|own|onmouse.+?|class|ng-(if|repeat|bind-html))=".+?"\s*/g,"");
 		log = log.replace(/(cursor:\s*default;|user-select:\s*auto;)\s*/g,"")
 		log = log.replace(/\s*style=""\s*>/g, ">");
+		log = log.replace(/\s+/g," ");
+		log = log.replace(/\n/g," ");
 		
 		dominion_log = log;
 		currentGameID = dominion_log.match(/#\d+/);
@@ -93,7 +102,9 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 	}
 });
 
-// called, when the popup is opened and will stop the interval timer
+/**
+ * called, when the popup is opened and will stop the interval timer
+ */
 function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/connect
 	console.log("connected to ",p);
 	
@@ -113,9 +124,6 @@ function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/
 				fullLog = "";
 			}
 		}
-		
-		
-		
 	});
 	
 	p.onDisconnect.addListener(disconnected);
@@ -123,15 +131,19 @@ function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/
 	timerPaused = true;
 	console.log('Timer paused');
 }
+chrome.runtime.onConnect.addListener(connected);
 
-// called, when the popup is closed and wil restart the interval timer again.
+/**
+ * called, when the popup is closed and wil restart the interval timer again.
+ */
 function disconnected(p) {
   console.log("backgroundscript disconnected from popup ", p);
   startTimer();
 }
 
-
-// extract the log information from dominion.games
+/**
+ * extract the log information from dominion.games
+ */
 function checkLog(){
 	chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => {
 		try{

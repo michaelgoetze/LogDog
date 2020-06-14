@@ -24,15 +24,15 @@ body {
 button {
 	background-color:#2A2A2A; 
 	color:#FFFFFF; 
-	padding-top:8px; 
-	padding-bottom:8px; 
+	padding-top:7px; 
+	padding-bottom:7px; 
 	border-width:2px; 
 	border-color:#FFFFFF;
 	font-family:TrajanPro-Bold;
 	font-variant:small-caps;
 	font-size:16pt;
-	margin-top:7px;
-	margin-bottom:7px;
+	margin-top:6px;
+	margin-bottom:6px;
 }
 
 select {

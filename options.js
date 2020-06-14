@@ -5,10 +5,7 @@ document.getElementsByTagName("head")[0].appendChild(imported);
 imported.src = "popup.js";  
 document.getElementsByTagName("head")[0].appendChild(imported);
 
-
 // HTML elements that are used here:
-var playerSelect = document.getElementById('playerSelect');
-var dateSelect = document.getElementById('dateSelect');
 var previousGames = document.getElementById("previousGames");
 var message = document.getElementById('message');
 var backupFile = document.getElementById('backup-file');
@@ -24,10 +21,17 @@ var ignoreBotBox = document.getElementById('ignoreBotGames');
  */
 function clearAllLogs(){
 	if(confirm("Are you sure? This will delete all logs permanently from this computer")){
-		chrome.storage.local.clear(function(){
-			while (previousGames.options.length) {
-				previousGames.remove(0);
-			}
+		chrome.storage.local.get(["settings"], function(settings){
+			chrome.storage.local.clear(function(){
+				while (previousGames.options.length) {
+					previousGames.remove(0);
+				}
+				var value = {}
+				value["settings"] = settings;
+				chrome.storage.local.set(value, function(){
+					console.log("cleared logs",settings)
+				});
+			});
 		});
 		
 		//Fill message field with text:
@@ -52,67 +56,60 @@ function clearAllLogs(){
 async function changeNames(){
 	var log = message.innerHTML;
 	if(log.match(/#\d+/) != null){
-		var player1;
-		var player2;
-		
+		var players = [];
+		var abbr = [];
+		var newAbbr = [];
 		// get current gameID from the presented log.
 		gameID = log.match(/#\d+/).toString()
 		
 		// Load the corresponding game 
 		var game = await loadStoredGameByGameID(gameID);
-		
-		// get the corrected player names (display the original ones)
-		var player1 = prompt("Player 1", game.players[0]);
-		if(player1 == null) return;
-		var player2 = prompt("Player 2", game.players[1]);
-		if(player2 == null) return;
+		for(let i=0; i<game.players.length; i++){
+			// get the corrected player names (display the original ones)
+			players[i] = prompt("Player "+(i+1), game.players[i]);
+			
+			if(players[i] == null) return;
+			abbr[i] = game.players[i].charAt(0);
+			newAbbr[i] = players[i].charAt(0);
+		}
 		
 		// Determine old and new name abbreviations:
-		var abbr1 = "";
-		var abbr2 = "";
-		let i=0;
-		do{
-			try{
-				abbr1 = abbr1 + player1.charAt(i);
-			}catch(e){
-				console.log("setting up abbr1");
-				console.log(e);
-				};
-			try{
-				abbr2 = abbr2 + player2.charAt(i);
-			}catch(e){
-				console.log("Setting up abbr2");
-				console.log(e);};
-			i++;
-		}while(abbr1 == abbr2);
 		
-		var newAbbr1 = "";
-		var newAbbr2 = "";
-		i=0;
+		let j=1;
 		do{
-			try{
-				newAbbr1 = newAbbr1 + player1.charAt(i);
-			}catch(e){
-				console.log("Setting up newAbbr1");
-				console.log(e);};
-			try{
-				newAbbr2 = newAbbr2 + player2.charAt(i);
-			}catch(e){
-				console.log("Setting up newAbbr2");
-				console.log(e);};
-			i++;
-		}while(newAbbr1 == newAbbr2);
+			for(let i=0; i<game.players.length; i++){
+				try{
+					abbr[i] = abbr[i] + players[i].charAt(j);
+				}catch(e){
+					console.log("setting up abbr1");
+					console.log(e);
+					};
+			}
+			j++;
+		}while(new Set(abbr).size < abbr.length);
+		
+		
+		j=1;
+		do{
+			for(let i=0; i<game.players.length; i++){
+				try{
+					newAbbr[i] = newAbbr[i] + players[i].charAt(j);
+				}catch(e){
+					console.log("setting up abbr1");
+					console.log(e);
+					};
+			}
+			j++;
+		}while(new Set(newAbbr).size < newAbbr.length);
 		
 		//Exchange names and abbreviations in the log 
-		var re = new RegExp(game.players[0], 'g');
-		game.log = game.log.replace(re, player1);
-		re = new RegExp(game.players[1], 'g');
-		game.log = game.log.replace(re, player2);
-		re = new RegExp(">"+abbr1+"<", 'g');
-		game.log = game.log.replace(re, ">"+newAbbr1+"<");
-		re = new RegExp(">"+abbr2+"<", 'g');
-		game.log = game.log.replace(re, ">"+newAbbr2+"<");
-		
+		for(let i=0; i<game.players.length; i++){
+			
+			var re = new RegExp(game.players[i], 'g');
+			game.log = game.log.replace(re, players[i]);
+			re = new RegExp(">"+abbr[i]+"<", 'g');
+			game.log = game.log.replace(re, ">"+newAbbr[i]+"<");
+		}
 		// store the modified log to the local storage
 		await storeLogLocally(game.log, game.uuid, game.kingdom, game.date);
 		
@@ -129,56 +126,6 @@ async function changeNames(){
 
 
 
-/**
- * function that filters matches in the previous games drop down menu based on the 
- * selected player and date.
- *
- * Player and date options are dynamically changed based on the other drop down box
- * selection.
- */
-function filterGames(){
-	
-	//get the values that will be used for filtering ("any" is one of the options).
-	var player = playerSelect.options[playerSelect.selectedIndex].value
-	var date = dateSelect.options[dateSelect.selectedIndex].value
-	
-	
-	// remove all games from the drop down menu first
-	for(i = previousGames.length-1; i>=0; i--){previousGames.remove(i);}
-	
-	// Load all games and filter for the matching ones 
-	chrome.storage.local.get(null,async function(games){
-		// get all game IDs
-		var allUUIDs = Object.keys(games);
-		// create a new array that will hold the filtered game ids
-		var filteredGames = {};
-		for(uuid of allUUIDs){
-			//check if the uuid key actually is a uuid to prevent exceptions
-			if (checkUUID(uuid)){
-				console.log(uuid)
-				var game = games[uuid];
-				//compare the filter to each game and push matching ids into gameIDs
-				if((date.trim() == "any" || game.date == date)&&(player.trim() == "any" || game.players.indexOf(player) != -1)){
-					filteredGames[uuid] = game;
-				}
-			}
-		}
-		
-		console.log(filteredGames)
-		
-		// Load only the filtered matches again
-		fillPreviousMatches(filteredGames, [player,date]);
-		
-		// Load the last entry of the list
-		try{
-			loadLastLog();
-		}catch(e){
-			message.innerHTML=emptyMessage;
-			console.log("error loading log, probably no log file saved");
-			console.log(e);
-		}
-	});
-};
 
 
 /**
@@ -204,35 +151,65 @@ function backupLogs() {
 }
 
 
+/**
+ * function that checks whether a game is already present under a different uuid. If so, it should be only added, if the log is different.
+ */
+function addIfAbsent(backupGame){
+	return new Promise((resolve) => {
+		chrome.storage.local.get(null, function(games) {
+			var allGames = []
+			
+			for(uuid in games){
+				if(games[uuid].gameID == backupGame.gameID){
+					allGames.push(games[uuid])
+				}
+			}
+			var found = false;
+			for(game of allGames){
+				try{
+					// include logs of identical logs and backup logs that are longer than the original but otherwise the same.
+					if(backupGame.log.indexOf(game.log)==0){
+						found = true;
+						break;
+					}
+				}catch(e){}
+			}
+			if(!found){
+				// Do only save the game, if the game-log is unique.
+				return resolve(backupGame);				
+			}
+			return resolve(null);
+		});
+	});
+}
 
 
 /**
  * Event listener that is triggered, when a file is selected for loading a backup.
  * The backup will override games that are already in the list and add all games 
  * that are not present. 
- *
- * 
  */
-backupFile.addEventListener('change',function(){
+backupFile.addEventListener('change', function(){
 	//get the file that was selected as a backup to load
 	var file = backupFile.files[0];
 	if (file) {
-		// Start a confirm dialog if the local storage alread contains games that might be overwritten.
-		if(previousGames.options.length != 0) {
-			if(!confirm("This will add all backed up games to your list. Any changes to games (e.g. player names) will be overwritten.\nProceed?")){
-				return;
-			}
-		}
-		
-		// Read the backup file
 		var reader = new FileReader();
 		reader.readAsText(file, "UTF-8");
-		reader.onload = function (evt) {
+		reader.onload = async function (evt) {
 			// parse String to JSON
-			var data = JSON.parse(evt.target.result);
-			// Save the JSON backup to the local storage
-			chrome.storage.local.set(data, function(){
-				chrome.storage.local.get(null, fillPreviousMatches);
+			var newGames = {};
+			var backupGames = JSON.parse(evt.target.result);
+			for(uuid of Object.keys(backupGames)){
+				var backupGame = backupGames[uuid];
+				// See, if the game is already present.
+				var newGame = await addIfAbsent(backupGame);
+				if(newGame != null){
+					newGames[newGame.uuid] = newGame;
+				}
+			}
+			chrome.storage.local.set(newGames, function() {
+				console.log("loaded backup")
+				chrome.storage.local.get(null, fillPreviousMatches)
 			});
 		}
 		reader.onerror = function (evt) {
@@ -246,32 +223,12 @@ backupFile.addEventListener('change',function(){
 
 
 /**
- * Link to Chrome:extensions
+ * Install event handlers, when content is loaded
  */
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
 	
-	
-	document.getElementById('chrome-extensions').addEventListener('click', function() {
-		chrome.tabs.update({ url: 'chrome://extensions' });
-	});
-	
-	ignoreBotBox.checked = await getSetting("ignoreBotGames", defaultValue = false);
-	
-	playerSelect.addEventListener("change", filterGames);
-	dateSelect.addEventListener("change", filterGames);
-	
-	
-	ignoreBotBox.addEventListener('change',function(){
-		//TODO has to change....
-		var settings = {}
-		settings["ignoreBotGames"] = ignoreBotBox.checked;
-		var value = {}
-		value["settings"] = settings;
-		chrome.storage.local.set(value, function(){
-			console.log("saved settings",settings)
-		});
-	});
-	
+	//Event handlers
+
 	document.getElementById('clearLogs').addEventListener('click',clearAllLogs);
 	document.getElementById('backupLogs').addEventListener('click',backupLogs);
 	document.getElementById('changeNames').addEventListener('click',changeNames);
@@ -279,7 +236,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 	document.getElementById('loadBackup').addEventListener('click',function(){
 		backupFile.click();
 	});
-
-
 	
+	// Status of settings: needs to load getSetting and setSetting first (avoid bug by loading it a bit later)
+	setTimeout(async function(){
+		ignoreBotBox.checked = await getSetting("ignoreBotGames", defaultValue = false);
+		ignoreBotBox.addEventListener('change',function(){
+			setSetting("ignoreBotGames",ignoreBotBox.checked);
+		});
+	},100);
+	
+	// Link to Chrome:extensions
+	document.getElementById('chrome-extensions').addEventListener('click', function() {
+		chrome.tabs.update({ url: 'chrome://extensions' });
+	});
 });
