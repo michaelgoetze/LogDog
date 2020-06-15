@@ -1,5 +1,12 @@
 # ChangeLog
 
+## v0.0.11:
+ - revised v0.0.10 declarativeContent is required to start the popup pageAction
+
+## v0.0.10:
+ - removed declarativeContent permission
+ - timer is only started on chrome startup, completed webnavigation and closing popup
+
 ## v0.0.9:
  - Date, player and game dropdown boxes are being sorted
  - Games can be reloaded as a new game with the same kingdom cards (no. of players by default 2)

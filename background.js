@@ -31,24 +31,24 @@ function startTimer(){
 chrome.runtime.onInstalled.addListener(function() {
 	console.log('Background script is installed');
 	chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-		chrome.declarativeContent.onPageChanged.addRules([{
-			conditions: [new chrome.declarativeContent.PageStateMatcher({
-				pageUrl: {hostEquals: 'dominion.games'},
-			})],
-			actions: [new chrome.declarativeContent.ShowPageAction()]
-		}]);
-	});  
+	chrome.declarativeContent.onPageChanged.addRules([{
+		conditions: [new chrome.declarativeContent.PageStateMatcher({
+			pageUrl: {hostEquals: 'dominion.games'},
+		})],
+		actions: [new chrome.declarativeContent.ShowPageAction()]
+	}]);
+	});
+  
 	console.log("starting timer after extension update/install");
 	startTimer();
 });
-
 chrome.webNavigation.onCompleted.addListener(function() {
   console.log("starting timer (webnavigation completed)");
   startTimer();
 });
 
 chrome.runtime.onStartup.addListener(function() {
-  console.log("starting timer (webnavigation completed)");
+  console.log("starting timer (chrome started)");
   startTimer();
 });
 
