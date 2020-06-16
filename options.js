@@ -76,21 +76,20 @@ async function changeNames(){
 		// Determine old and new name abbreviations:
 		
 		let j=1;
-		do{
+		while(new Set(abbr).size < abbr.length){
 			for(let i=0; i<game.players.length; i++){
 				try{
-					abbr[i] = abbr[i] + players[i].charAt(j);
+					abbr[i] = abbr[i] + game.players[i].charAt(j);
 				}catch(e){
 					console.log("setting up abbr1");
 					console.log(e);
 					};
 			}
 			j++;
-		}while(new Set(abbr).size < abbr.length);
-		
+		}
 		
 		j=1;
-		do{
+		while(new Set(newAbbr).size < newAbbr.length){
 			for(let i=0; i<game.players.length; i++){
 				try{
 					newAbbr[i] = newAbbr[i] + players[i].charAt(j);
@@ -100,7 +99,7 @@ async function changeNames(){
 					};
 			}
 			j++;
-		}while(new Set(newAbbr).size < newAbbr.length);
+		};
 		
 		//Exchange names and abbreviations in the log 
 		for(let i=0; i<game.players.length; i++){
