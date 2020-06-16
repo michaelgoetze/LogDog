@@ -128,16 +128,15 @@ function sortSelect(selElem, skip=0) {
         tmpAry[i-skip][0] = selElem.options[i].text;
         tmpAry[i-skip][1] = selElem.options[i].value;
     }
-    
 	tmpAry.sort(function (a, b) {
 		return a[0].toLowerCase().localeCompare(b[0].toLowerCase());
 	});
 	while (selElem.options.length > skip+1) {
         selElem.options[skip+1] = null;
     }
-    for (var i=skip;i<tmpAry.length;i++) {
-        var op = new Option(tmpAry[i-skip][0], tmpAry[i-skip][1]);
-        selElem.options[i] = op;
+    for (var i=0;i<tmpAry.length;i++) {
+        var op = new Option(tmpAry[i][0], tmpAry[i][1]);
+        selElem.options[i+skip] = op;
     }
     return;
 }
@@ -292,8 +291,6 @@ async function fillPreviousMatches(games, filteredBy=["any","any"]) {
 		console.log("Error loading last log");
 		console.log(e);
 	}
-	
-	
 }
 
 /**

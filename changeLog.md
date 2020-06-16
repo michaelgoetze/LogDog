@@ -2,6 +2,7 @@
 
 ## v0.0.11:
  - revised v0.0.10 declarativeContent is required to start the popup pageAction
+ - fixed bug with sorting
 
 ## v0.0.10:
  - removed declarativeContent permission
