@@ -1,6 +1,6 @@
 {
 	"name": "LogDog - Logger for Dominion Online",
-	"version": "0.0.11",
+	"version": "0.0.12",
 	"manifest_version": 2,
 	"description": "Keep track of your Dominion.Games logs.",
 	"page_action": {
@@ -11,7 +11,7 @@
 		},
 		"default_popup": "popup.html"
 	},
-	"permissions": ["webNavigation","downloads","storage","unlimitedStorage","*://dominion.games/*","declarativeContent"],
+	"permissions": ["downloads","storage","unlimitedStorage","*://dominion.games/*"],
 	"icons": {
 		"32": "images/LogDog32.png",
 		"128": "images/icon.png",

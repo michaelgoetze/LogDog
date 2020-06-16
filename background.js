@@ -25,30 +25,20 @@ function startTimer(){
 }
 
 /**
- * start the script to run constantly. checkLog() will do anything on dominion.games
- * only run pageActions on dominion.games
+ * start the script to run constantly. checkLog() will only run on dominion.games
  */
 chrome.runtime.onInstalled.addListener(function() {
-	console.log('Background script is installed');
-	chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-	chrome.declarativeContent.onPageChanged.addRules([{
-		conditions: [new chrome.declarativeContent.PageStateMatcher({
-			pageUrl: {hostEquals: 'dominion.games'},
-		})],
-		actions: [new chrome.declarativeContent.ShowPageAction()]
-	}]);
-	});
-  
 	console.log("starting timer after extension update/install");
 	startTimer();
-});
-chrome.webNavigation.onCompleted.addListener(function() {
-  console.log("starting timer (webnavigation completed)");
-  startTimer();
 });
 
 chrome.runtime.onStartup.addListener(function() {
   console.log("starting timer (chrome started)");
+  startTimer();
+});
+
+chrome.tabs.onUpdated.addListener(function() {
+  console.log("starting timer (tabs updated)");
   startTimer();
 });
 
@@ -151,10 +141,14 @@ function checkLog(){
 			let url = tab.url;
 			if(url.match(".*/dominion.games/.*")){
 				
+				//enable the LogDog icon
+				chrome.pageAction.show(tab.id);
                 chrome.tabs.sendMessage(tab.id, {
 					action: "getLogFromContent",
 					kingdom: kingdom
 				});
+			}else{
+				chrome.pageAction.hide(tab.id);
 			}
 		}catch(e){}
     });

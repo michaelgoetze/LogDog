@@ -1,5 +1,8 @@
 # ChangeLog
 
+## v0.0.12:
+ - reduced number of permissions (removed declarativeContent and Webnavigation) this should speed up chrome webstore requests
+
 ## v0.0.11:
  - revised v0.0.10 declarativeContent is required to start the popup pageAction
  - fixed bug with sorting
