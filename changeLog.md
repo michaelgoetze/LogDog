@@ -1,5 +1,13 @@
 # ChangeLog
 
+## v0.0.14:
+ - save log after each turn (not every decision) and at the end of the game.
+ - cleaned code
+ 
+## v0.0.13:
+ - added dynamic tabs to show kingdom cards log (functionalities in progress)
+ - extract VP counts 
+
 ## v0.0.12:
  - reduced number of permissions (removed declarativeContent and Webnavigation) this should speed up chrome webstore requests
 

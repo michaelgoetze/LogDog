@@ -76,7 +76,7 @@ h2 {
 	
 }
 
-div#message {
+div#LogPanel {
 	border-style:solid;
 	border-radius:5px;
 	border-width: 2px;
@@ -88,3 +88,64 @@ div#message {
 	height:300px; 
 	padding:5px;
 }
+
+div#ResultPanel {
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps;
+	padding:5px;
+}
+
+#tablist {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#tablist li {
+	background-color: #2A2A2A;
+	border: 1px solid white;
+	border-bottom: 1px solid black;
+	border-radius: 0.5em 0.5em 0 0;
+	display: inline;
+	font-family:TrajanPro-Bold;
+	font-variant:small-caps;
+	height: 1em;
+	padding: 0.5em 0.5em 10px;
+}
+
+#tablist li:focus,
+#tablist li:hover {
+	background-color: #AAAAAA;
+}
+
+#tablist li[aria-selected="true"] {
+	background-color: black;
+	padding: 0.5em 0.5em 11px;
+}
+
+#tabcontent {
+	background-color: black;
+	border: 1px solid white;
+	margin-top: 10px;
+	padding: 1em;
+}
+
+[aria-hidden="true"] {
+	display: none;
+}
+
+[aria-hidden="false"] {
+	display: block;
+}
+
+.divImg {
+padding: 15px;
+padding-top:8px;
+background-color: black; 
+position: absolute; float:right;
+margin:15px;
+top: 12px; 
+visibility:hidden;
+z-index:10;
+}
+

@@ -1,12 +1,3 @@
-/**
- *
- * to save a game to local storage, use:
- *	var gameID = storeLogLocally(htmlCode, kingdom);
- *
- *	
- *	the calling function must be async!
- */
- 
 
 
 /**
@@ -14,10 +5,10 @@
  *
  * returns: gameID
  */
-async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none", ignoreBotGames = null) { 
+async function storeLogLocally(gameLog, uuid, gameStatus=undefined, VPs = undefined, kingdom = undefined, dateString = "none", ignoreBotGames = null) { 
 	try{
 		// get game ID from the log
-		var	gameID = gameLog.match(/#\d+/).toString();
+		let	gameID = gameLog.match(/#\d+/).toString();
 		console.log(gameID)
 		if(gameID.length > 0){
 			// extract player name and order. This is tested for english and should work for german, french and might work for russian. 
@@ -25,18 +16,17 @@ async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none",
 			
 			gameLog = gameLog.replace(/Rattington/g, "Rat");
 			
-			var regexp = />(Turn|Zug|Tour|Ход) 1 - (.+?)</g;
+			let regexp = />(Turn|Zug|Tour|Ход) 1 - (.+?)</g;
 			players = [];
 			console.log("trying to save")
-			var player = regexp.exec(gameLog);
-			var bots = ["Lord Rat","Revenge Witch","Lord Voldebot"];
+			let player = regexp.exec(gameLog);
+			let bots = ["Lord Rat","Revenge Witch","Lord Voldebot"];
 			if(ignoreBotGames == null){
 				ignoreBotGames = await getSetting("ignoreBotGames", defaultValue = false);
 			}
 			console.log("ignoreBotGames", ignoreBotGames);
 			while(player!=null){
 				players.push(player[2])
-				console.log(player[2])
 				if(ignoreBotGames && bots.indexOf(player[2])!=-1){
 					console.log("Ignoring Bot Game")
 					return;
@@ -54,22 +44,24 @@ async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none",
 				dateString = getDateDDMMYYYY();
 			}
 			
-			//generate object with game info (can be expanded later (e.g. VP counter))
-			var game = {
+			//generate object with game info (can be expanded further later)
+			let game = {
 				uuid: uuid,
 				gameID: gameID,
 				players: players,
 				date: dateString,
 				kingdom: kingdom,
-				log: gameLog
+				VPs: VPs,
+				log: gameLog,
+				gameStatus: gameStatus
 			};
 			
 			// save the game to local storage
-			var saveGame = {};
+			let saveGame = {};
 			saveGame[uuid] = game;
 			if(/#\d+/.test(gameID)){               
 				chrome.storage.local.set(saveGame, function() {
-					console.log("Log saved locally: ", gameID, players, dateString);
+					console.log("Log saved locally: ",VPs, kingdom, gameID, players, dateString, gameStatus);
 				});
 			}else{
 				console.log("No correct gameID: " + gameID)
@@ -91,7 +83,7 @@ async function storeLogLocally(gameLog, uuid, kingdom = "", dateString = "none",
 function loadStoredGameByGameID(gameID) {
     return new Promise((resolve) => {
 		chrome.storage.local.get(null, function(games) {
-			var allGames = []
+			let allGames = []
 			for(uuid in games){
 				if(games[uuid].gameID == gameID){
 					allGames.push(games[uuid])
@@ -99,10 +91,10 @@ function loadStoredGameByGameID(gameID) {
 			}
 			
 			if(allGames.length>1){
-				var bots = ["Lord Rattington","Revenge Witch","Lord Voldebot"];
+				let bots = ["Lord Rattington","Revenge Witch","Lord Voldebot"];
 				for(game of allGames){
 					//Check if the game was played without bots, if so, this is the original game 
-					var combined = bots.concat(game.players);
+					let combined = bots.concat(game.players);
 					if((combined.length == new Set(combined).size)){
 						resolve(game);
 						return;
@@ -152,7 +144,7 @@ function setSetting(property, value){
 			settings = {}
 		}
 		settings[property] = value;
-		var settingsObj = {}
+		let settingsObj = {}
 		settingsObj["settings"] = settings;
 		chrome.storage.local.set(settingsObj, function(){
 			console.log("updated settings",settings)
@@ -164,16 +156,16 @@ function setSetting(property, value){
  * A function that returns an array with DD, MM, YYYY info of the current day. This function is used below to generate two different date strings for files and logs.
  */
 function getDateArray(){
-	var today = new Date();
-	var dd = today.getDate().toString();
+	let today = new Date();
+	let dd = today.getDate().toString();
 	while (dd.length < 2) {
         dd = '0' + dd;
     }
-	var mm = (today.getMonth()+1).toString();
+	let mm = (today.getMonth()+1).toString();
 	while (mm.length < 2) {
         mm = '0' + mm;
     }
-	var yyyy = (today.getYear()+1900).toString();
+	let yyyy = (today.getYear()+1900).toString();
 	
 	return [dd,mm,yyyy];
 }
@@ -191,8 +183,8 @@ function getDateDDMMYYYY(separator="/"){
  * 20/05/28
  */
 function getDateYYMMDD(separator="/"){
-	var date = getDateArray();
-	var newDate = [];
+	let date = getDateArray();
+	let newDate = [];
 	newDate.push(date[2].substring(2));
 	newDate.push(date[1]);
 	newDate.push(date[0]);
@@ -208,7 +200,7 @@ function getDateUUID(date=null) {
 	  date = getDateYYMMDD("");
   }
   return date + '-xxxx-xxxx-xxxx-xxxx'.replace(/[x]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    let r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
@@ -225,5 +217,5 @@ function checkUUID(uuid){
 }
  
  
-// variable that can be put ito the message div, if there is nothing to show.
+// variable that can be put ito the LogPanel div, if there is nothing to show.
 var emptyMessage = "no&nbsp;Log&nbsp;available&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"

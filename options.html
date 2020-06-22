@@ -1,11 +1,16 @@
 <html>
 	<head>
+		<script src='options.js'></script>
 		<script src='popup.js' ></script>
+		<script src='storeLog.js' ></script>
 		<link rel="stylesheet" type="text/css" href="main.css">
-
 	</head>
 	<body>
-		<table style="width:1500px;"><tbody style="width:100%;">
+	
+		<div id="largeImage" class="divImg">
+			<img id="currentImg" alt="img">
+		</div>
+		<table style="width:1600px;"><tbody style="width:100%;">
 			<tbody>
 				<tr>
 					<td style="width:50%;padding-right:30px;">
@@ -43,7 +48,7 @@
 						</div>
 					</td>
 					<td style="width:50%;padding-left:30px;">
-						<table>
+						<table style="width:100%">
 							<tr>
 								<td style="width:50%">
 									<select id="playerSelect"></select>
@@ -68,7 +73,31 @@
 							</tr>
 							<tr>
 								<td colspan="2">
-								<div id="message" style="height:600px;">Analysing Dominion Log.</div>
+									<div id="tabpanel" style="margin-top:10px;">
+										<ul role="tablist" id="tablist">
+											<li id="link1" role="tab" aria-controls="LogTab" aria-selected="true">Log</li>
+											<li id="link2" role="tab" aria-controls="KingdomPanel" aria-selected="false">Kingdom</li>
+											<!--<li id="link3" role="tab" aria-controls="DeckPanel" aria-selected="false">Decks</li>
+											<li id="link4" role="tab" aria-controls="TrashPanel" aria-selected="false">Trash</li>-->
+										</ul>
+										<div id="tabcontent" style="width:95%">
+											<div class="dominionDiv" id="LogTab" role="tabpanel" aria-labelledby="link1" aria-hidden="false">
+												<div id="ResultPanel"></div>
+												<div id="LogPanel"></div>
+											</div>
+											<div id="KingdomPanel" role="tabpanel" aria-labelledby="link2" aria-hidden="true">
+												Available card set
+											</div>
+											<!--
+											<div id="DeckPanel" role="tabpanel" aria-labelledby="link3" aria-hidden="true">
+												Cards of each player
+											</div>
+											<div id="TrashPanel" role="tabpanel" aria-labelledby="link4" aria-hidden="true">
+												Trashed Cards
+											</div>
+											-->
+										</div>
+									</div>
 								</td>
 							</tr>
 						</table>
@@ -76,7 +105,5 @@
 				</tr>
 			</tbody>
 		</table>
-		<script src="options.js"></script>
-		<script src='popup.js' ></script>
 	</body>
 </html>

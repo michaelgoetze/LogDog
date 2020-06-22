@@ -1,8 +1,12 @@
+
+//information about the currently played game
 var uuid = ""
 var fullLog = "";
-var ended = "";
+var gameStatus = "";
 var gameID = ""
 var kingdom = "";
+var VPs = "";
+var turn = 0;
 var timer;
 var timerPaused = true;
 
@@ -48,35 +52,43 @@ chrome.tabs.onUpdated.addListener(function() {
 chrome.runtime.onMessage.addListener(function(request, sender) {
 	if (request.action == "getLog") {
 		// remove unnecessary code or code that will otherwise give errors later. saves space!
-		var log = request.domLog.html;
+		let log = request.domLog.html;
 		log = log.replace(/<!---->/g, "");
 		log = log.replace(/(data-ng-animate|own|onmouse.+?|class|ng-(if|repeat|bind-html))=".+?"\s*/g,"");
 		log = log.replace(/(cursor:\s*default;|user-select:\s*auto;)\s*/g,"")
 		log = log.replace(/\s*style=""\s*>/g, ">");
 		log = log.replace(/\s+/g," ");
 		log = log.replace(/\n/g," ");
-		
 		dominion_log = log;
 		currentGameID = dominion_log.match(/#\d+/);
+		let regexp = /(?:Turn|Zug|Tour|Ход) (\d+)(?![\s\S]*(?:Turn|Zug|Tour|Ход))/;
+		try{
+			let currentTurn = parseInt(regexp.exec(dominion_log)[1]);
+		}catch(e){currentTurn = -1}
+		
+		gameStatus = request.domLog.gameStatus;
 		if(currentGameID != null){
 			currentGameID = currentGameID.toString();
+			//Store the game, if it wasn't stored before.
 			if(!(gameID === currentGameID)){
 				
 				uuid = getDateUUID();
 				console.log("New game started ", gameID, uuid);
 				fullLog = dominion_log;
 				kingdom = request.domLog.kingdom;
-				ended = request.domLog.timeout;
+				VPs = request.domLog.VPs;
 				gameID = currentGameID;
 				
 				
-				storeLogLocally(fullLog, uuid, kingdom = kingdom);
-				
-			}else if(fullLog.length < dominion_log.length){
+				storeLogLocally(fullLog, uuid, gameStatus = gameStatus, VPs = VPs, kingdom = kingdom);
+			//Store the game upon a change ?? //fullLog.length < dominion_log.length
+			// Rather save game after every turn. or at every decision after game ended button popped up. 
+			}else if(currentTurn > turn || (gameStatus != "" && fullLog.length < dominion_log.length)) {
+				turn = currentTurn
 				fullLog = dominion_log;
-				ended = request.domLog.timeout;
-				kingdom = request.domLog.kingdom;				
-				storeLogLocally(fullLog, uuid, kingdom = kingdom);
+				kingdom = request.domLog.kingdom;	
+				VPs = request.domLog.VPs;			
+				storeLogLocally(fullLog, uuid, gameStatus = gameStatus, VPs = VPs, kingdom = kingdom);
 			}
 		}else{
 			console.log("no active game running");
@@ -84,11 +96,10 @@ chrome.runtime.onMessage.addListener(function(request, sender) {
 	}else if(request.action == "clearAllLogs"){
 		console.log("clearing all Logs!");
 		fullLog = "";
-		ended = "";
+		gameStatus = "";
 		gameID = ""
 		kingdom = "";
-	}else if(request.action == "getKingdom"){
-		console.log(request.kingdom);
+		VPs = "";
 	}
 });
 
@@ -101,7 +112,7 @@ function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/
 	p.onMessage.addListener(function(m) {
 		if(m.request === "getFullLog"){
 			checkLog();
-			setTimeout(function(){p.postMessage({log: fullLog, uuid: uuid, timeout: ended, kingdom: kingdom }); }, 200);
+			setTimeout(function(){p.postMessage({log: fullLog, uuid: uuid, gameStatus: gameStatus, kingdom: kingdom }); }, 200);
 		}
 		if(m.request === "deleteLog"){
 			console.log("delete received of game " + m.gameID);
@@ -109,9 +120,11 @@ function connected(p) { //from https://developer.mozilla.org/en-US/docs/Mozilla/
 				
 				uuid = ""
 				kingdom = "";
-				ended = "";
+				VPs = "";
+				gameStatus = "";
 				gameID = "";
 				fullLog = "";
+				turn = 0;
 			}
 		}
 	});
@@ -144,8 +157,7 @@ function checkLog(){
 				//enable the LogDog icon
 				chrome.pageAction.show(tab.id);
                 chrome.tabs.sendMessage(tab.id, {
-					action: "getLogFromContent",
-					kingdom: kingdom
+					action: "getLogFromContent"
 				});
 			}else{
 				chrome.pageAction.hide(tab.id);

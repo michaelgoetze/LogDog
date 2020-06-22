@@ -3,24 +3,40 @@
   * central function that parses the HTML code to extract the game log from 
   * dominion.games
   */
-function getGameLog(kingdom = "") {
-	let ended = "none";
-	let value = "none";
-	
+function getGameLog() {
+	let gameStatus = "";
+	let log = "";
+	let kingdom = ""
+	let VPs = [];
 	try {
-		value = document.getElementsByClassName('game-log')[0].innerHTML;
-		ended = document.getElementsByClassName('timeout')[0].innerHTML;
-		if(kingdom == ""){
-			kingdom = getKingdom();
-			console.log("Kingdom updated")
-			console.log(kingdom)
+		log = document.getElementsByClassName('game-log')[0].innerHTML;
+		kingdom = getKingdom();
+		
+		// extract VP-information if the counter is activated
+		for(elt of document.getElementsByClassName("opponent-name")){
+			name = elt.innerText.replace(/(.+)\s+[-\d]+VP/,"$1");
+			vp_value = elt.innerText.replace(/.+\s([-\d]+)VP/,"$1");
+			const entry = {
+				player: name,
+				vp_value: vp_value
+			}
+			VPs.push(entry)
 		}
 	}catch (e) {}
-
-	let result = {
-		"timeout": ended,
-		"html": value,
-		"kingdom": kingdom
+	
+	try{
+		const endStatus = document.getElementsByClassName('timeout');
+		if(endStatus!=undefined){
+			for(elt of endStatus){
+				gameStatus += elt.innerText+" " 
+			}
+		}
+	}catch(e){}
+	const result = {
+		"gameStatus": gameStatus,
+		"html": log,
+		"kingdom": kingdom,
+		"VPs":VPs
 	}
 	return result;
 }
@@ -38,7 +54,7 @@ function loadGame(gameID, delay = 567){
 			document.getElementsByClassName('lobby-button')[1].click();
 			setTimeout(function(){
 				// Fill out game id
-				var gameIdInput = document.getElementsByClassName('table-rule-text-input')[0];
+				let gameIdInput = document.getElementsByClassName('table-rule-text-input')[0];
 				gameIdInput.value=gameID;
 				gameIdInput.dispatchEvent(new Event('change'));
 				setTimeout(function(){
@@ -46,12 +62,12 @@ function loadGame(gameID, delay = 567){
 					document.getElementsByClassName('lobby-button')[2].click()
 					setTimeout(function(){
 						// Fill out decision value
-						var decision = document.getElementsByClassName('table-rule-text-input')[1];
+						let decision = document.getElementsByClassName('table-rule-text-input')[1];
 						decision.value = 0;
 						decision.dispatchEvent(new Event('change'));
 						setTimeout(function(){
 							//Add Bot Lord Rattington
-							var botButton = document.getElementsByClassName('lobby-button kingdom-selection')[0];
+							let botButton = document.getElementsByClassName('lobby-button kingdom-selection')[0];
 							if(botButton.parentElement.ariaHidden=="false"){
 								botButton.click()
 							}
@@ -80,7 +96,7 @@ function loadGame(gameID, delay = 567){
  *  document.getElementsByClassName('kingdom-viewer-group') //contains cards
  *
  ******************************************************************************************************************************************
- *  Exclude cards, that are not kingdom supply cards?
+ *  Exclude cards, that are not kingdom supply cards
  *
  * Standard Supply:
  * "Copper","Curse","Duchy","Estate","Gold","Potion","Province","Silver",
@@ -130,7 +146,7 @@ function loadGame(gameID, delay = 567){
  */ 
 function getKingdom(){
 	//exclude mixed piles, ruins and landscape cards (see above).
-	var excluded = [
+	const excluded = [
 	"Abandoned Mine","Ruined Library","Ruined Market","Ruined Village","Survivors",
 	"Dame Anna","Dame Josephine","Dame Molly","Dame Natalie","Dame Sylvia","Sir Martin","Sir Bailey","Sir Destry","Sir Michael","Sir Vander",
 	"Humble Castle","Crumbling Castle","Small Castle","Haunted Castle","Opulent Castle","Sprawling Castle","Grand Castle","King's Castle",
@@ -139,9 +155,9 @@ function getKingdom(){
 	"Flag","Horn","Key","Lantern","Treasure Chest",
 	"Lost in the Woods","Deluded","Envious","Miserable","Twice Miserable"]
 	try{
-		var cards = [];
+		let cards = [];
 		for(elt of document.getElementsByClassName('kingdom-viewer-group')[0].getElementsByClassName('full-card-name card-name')){
-			var card = elt.innerText.trim();
+			const card = elt.innerText.trim();
 			if(excluded.indexOf(card)==-1){
 				cards.push(card);
 			}
@@ -149,15 +165,15 @@ function getKingdom(){
 		
 		for(elt of document.getElementsByClassName('landscape-name')){
 			if(elt.className.indexOf('unselectable')==-1){
-				var card = elt.innerText.trim();
+				const card = elt.innerText.trim();
 				if(excluded.indexOf(card)==-1){
 					cards.push(card);
 				}
 			}
 		}
 		
-		var shelters = false;
-		var colonyPlatin = false;
+		let shelters = false;
+		let colonyPlatin = false;
 		
 		for (elt of document.getElementsByClassName('full-card-name card-name')){
 			if(["Platinum","Colony"].indexOf(elt.innerText.trim()) !=-1){
@@ -192,7 +208,7 @@ function loadKingdom(kingdom, delay = 567){
 				document.getElementsByClassName('lobby-button')[0].click();
 				setTimeout(function(){
 					//Add Bot Lord Rattington
-					var botButton = document.getElementsByClassName('lobby-button kingdom-selection')[0];
+					let botButton = document.getElementsByClassName('lobby-button kingdom-selection')[0];
 					if(botButton.parentElement.ariaHidden=="false"){
 						botButton.click()
 					}
@@ -203,7 +219,7 @@ function loadKingdom(kingdom, delay = 567){
 							while(document.getElementsByClassName("selection-symbol").length>0){	
 								document.getElementsByClassName("selection-symbol")[0].click()	
 							}
-							var kingdomInput = document.getElementsByClassName("ng-pristine ng-untouched ng-empty ng-valid ng-valid-required")[0];
+							let kingdomInput = document.getElementsByClassName("ng-pristine ng-untouched ng-empty ng-valid ng-valid-required")[0];
 							kingdomInput.value = kingdom["kingdomCards"];
 							kingdomInput.dispatchEvent(new Event('change'));
 							
@@ -247,7 +263,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 		// get log information
 		chrome.runtime.sendMessage({
 			action: "getLog",
-			domLog: getGameLog(message.kingdom)
+			domLog: getGameLog()
 		});
 	}
 });
