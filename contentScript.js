@@ -22,7 +22,7 @@ function getGameLog() {
 			}
 			VPs.push(entry)
 		}
-	}catch (e) {}
+	}catch (e) {console.log(e)}
 	
 	try{
 		const endStatus = document.getElementsByClassName('timeout');

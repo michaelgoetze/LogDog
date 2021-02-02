@@ -34,6 +34,39 @@ function clearAllLogs(){
 }
 
 /**
+ * function that abbreveiates player names as in dominion.games logs
+ */
+function abbreviateNames(players){
+  abbr = []
+  for(i=0;i<players.length;i++){
+    abbr.push("");
+  }
+  let j=0;
+  let duplicates = [];
+  let fullAbbr = new Array(players.length);
+  let ignore = [];
+  do{
+    duplicates = [];
+    for(i=0; i<players.length;i++){
+      abbr[i] += players[i].charAt(j);
+    }
+
+    for(i=abbr.length-1; i>=0;i--){
+      firstIndex = abbr.indexOf(abbr[i]);
+      if(firstIndex!=i){
+        duplicates.push(i);
+        duplicates.push(firstIndex);
+      }else if(duplicates.indexOf(i) == -1 && ignore.indexOf(i) == -1){
+        fullAbbr[i] = abbr[i]
+        ignore.push(i)
+      }
+    }
+    j++;
+  }while(j<4)
+  return fullAbbr;
+}
+
+/**
  * function that allows to change the name of players in case the log was fetched
  * after the game was done and AI player took the place.
  *
@@ -44,49 +77,22 @@ async function changeNames(){
 	let log = LogPanel.innerHTML;
 	if(log.match(/#\d+/) != null){
 		let players = [];
-		let abbr = [];
-		let newAbbr = [];
 		// get current gameID from the presented log.
 		gameID = log.match(/#\d+/).toString()
 		
-		// Load the corresponding game 
+		// Load the corresponding game and initialize the abbreviations
 		const game = await loadStoredGameByGameID(gameID);
 		for(let i=0; i<game.players.length; i++){
 			// get the corrected player names (display the original ones)
 			players[i] = prompt("Player "+(i+1), game.players[i]);
-			
+			// clicked cancel
 			if(players[i] == null) return;
-			abbr[i] = game.players[i].charAt(0);
-			newAbbr[i] = players[i].charAt(0);
 		}
 		
 		// Determine old and new name abbreviations:
-		
-		let j=1;
-		while(new Set(abbr).size < abbr.length){
-			for(let i=0; i<game.players.length; i++){
-				try{
-					abbr[i] = abbr[i] + game.players[i].charAt(j);
-				}catch(e){
-					console.log("setting up abbr1");
-					console.log(e);
-					};
-			}
-			j++;
-		}
-		
-		j=1;
-		while(new Set(newAbbr).size < newAbbr.length){
-			for(let i=0; i<game.players.length; i++){
-				try{
-					newAbbr[i] = newAbbr[i] + players[i].charAt(j);
-				}catch(e){
-					console.log("setting up abbr1");
-					console.log(e);
-					};
-			}
-			j++;
-		};
+		let abbr = abbreviateNames(game.players);
+		let newAbbr = abbreviateNames(players);
+
 		
 		//Exchange names and abbreviations in the log 
 		for(let i=0; i<game.players.length; i++){
@@ -125,7 +131,7 @@ function backupLogs() {
 	//load all games and save them to the download folder
 	chrome.storage.local.get(null, function(games) { 
 		// Convert object to a Json string.
-		const result = JSON.stringify(games);
+		const result = JSON.stringify(games,null,"  ");
 
 		// Save the Json file
 		const url = 'data:application/json;base64,' + btoa(result);

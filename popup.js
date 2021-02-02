@@ -134,7 +134,8 @@ async function loadLog(index = -1){
 						if(gameStatus!=undefined){
 							txt=txt+gameStatus;
 						}
-						
+					}catch(e){}
+					try{
 						game.kingdom.kingdomCards.forEach(card =>{
 							let cardImage = new Image();
 							if(["Avanto", "Bustling Village", "Emporium", "Fortune", "Plunder", "Rocks"].indexOf(card) == -1){
